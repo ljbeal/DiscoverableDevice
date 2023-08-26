@@ -100,11 +100,6 @@ class DiscoverableDevice(MQTTClient):
                 self._switches[topic].off()
             # can we send data only for updated switches?
             self.read_sensors()
-        
-    @property
-    def base_topic(self):  # TODO: kill
-        integration = "sensor" if len(self.switches) == 0 else "switch"
-        return f"{self._discovery_prefix}/{integration}/{self.uid}"
     
     @property
     def state_topic(self):
