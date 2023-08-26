@@ -1,5 +1,5 @@
 class Sensor:
-    def __init__(self, name, icon, unit, parent_uid):
+    def __init__(self, name, icon, unit, discovery_prefix, parent_uid):
         
         if " " in name:
             raise ValueError("names cannot contain spaces")
@@ -9,10 +9,15 @@ class Sensor:
         self._unit = unit
         
         self._parent_uid = parent_uid
+        self._discovery_prefix = discovery_prefix
         
     @property
     def integration(self):
         return "sensor"
+    
+    @property
+    def discovery_prefix(self):
+        return self._discovery_prefix
     
     @property
     def name(self):
@@ -29,10 +34,6 @@ class Sensor:
     @property
     def unit(self):
         return self._unit
-    
-    @property
-    def function(self):
-        return self._function
     
     @property
     def discovery_payload(self):

@@ -9,7 +9,7 @@ import json
 import time
 
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 
 class DiscoverableDevice(MQTTClient):
@@ -43,7 +43,7 @@ class DiscoverableDevice(MQTTClient):
                  port: int = 1883,
                  name: str = "PicoTest",
                  discovery_prefix: str = "homeassistant",
-                 location: str = None,
+                 location: str | None = None,
                  interval: int = 5):
         
         self._uid = ubinascii.hexlify(unique_id()).decode()
@@ -102,18 +102,13 @@ class DiscoverableDevice(MQTTClient):
             self.read_sensors()
         
     @property
-    def base_topic(self):
+    def base_topic(self):  # TODO: kill
         integration = "sensor" if len(self.switches) == 0 else "switch"
         return f"{self._discovery_prefix}/{integration}/{self.uid}"
     
     @property
     def state_topic(self):
-        return f"{self._discovery_prefix}/sensor/{self.uid}/state"
-    
-    @property
-    def command_topic(self):
-        # TODO: Change this, needs to be per switch
-        return f"{self._discovery_prefix}/switch/{self.uid}/set"       
+        return f"{self._discovery_prefix}/sensor/{self.uid}/state"     
         
     def discover(self):
         """
@@ -124,9 +119,6 @@ class DiscoverableDevice(MQTTClient):
         
             payload = sensor.discovery_payload                
             payload["device"] = self.device_payload
-            
-            if "command_topic" in payload:
-                payload["command_topic"] = self.command_topic
                 
             payload["state_topic"] = self.state_topic
                 
@@ -186,7 +178,7 @@ class DiscoverableDevice(MQTTClient):
     def discovery_prefix(self):
         return self._discovery_prefix
         
-    def add_sensor(self, name: str, icon: str, unit: str, _class, *args, **kwargs):
+    def add_sensor(self, name: str, icon: str, unit: str | None, _class, *args, **kwargs):
         """
         Add a sensor at name `name`
         
@@ -208,12 +200,13 @@ class DiscoverableDevice(MQTTClient):
             
         if not icon.startswith("mdi:"):
             icon = "mdi:" + icon
-            
+
         self._sensors[name] = _class(*args,
                                      **kwargs,
                                      name=name,
                                      icon=icon,
                                      unit=unit,
+                                     discovery_prefix=self.discovery_prefix,
                                      parent_uid=self.uid)
         
     def add_switch(self, name, _class, *args, **kwargs):
@@ -225,12 +218,12 @@ class DiscoverableDevice(MQTTClient):
         if name in self.sensors:
             raise ValueError(f"Switch {name} already exists! Delete it or choose a different name.")
         print(_class)
-        switch = _class(*args, **kwargs, name=name, parent_uid=self.uid)
+        switch = _class(*args, **kwargs, name=name, discovery_prefix=self.discovery_prefix, parent_uid=self.uid)
         
-        self._switches[self.command_topic] = switch
+        self._switches[switch.command_topic] = switch
         
-        print("subscribing to command topic", self.command_topic)
-        self.subscribe(self.command_topic)
+        print("subscribing to command topic", switch.command_topic)
+        self.subscribe(switch.command_topic)
         
     def delete(self):
         """

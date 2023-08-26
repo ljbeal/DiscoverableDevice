@@ -3,18 +3,18 @@ from Sensor import Sensor
 
 class Switch(Sensor):
     
-    def __init__(self, name, parent_uid):
+    def __init__(self, name, discovery_prefix, parent_uid):
         
         unit = None  # units don't make sense for a switch
         icon = "mdi:toggle-switch"  # enforce toggle for now
         
-        super().__init__(name, icon, unit, parent_uid)
-        
         if hasattr(self, "setup"):
             # if we have a setup function that ensures an initial state, call it
-            self.setup()
+            self.setup() # type: ignore
         else:
             self._state = False
+        
+        super().__init__(name, icon, unit, discovery_prefix, parent_uid)
         
     @property
     def integration(self):
@@ -24,7 +24,7 @@ class Switch(Sensor):
     def discovery_payload(self):
         payload = {"unique_id": f"{self.parent_uid}_{self.name}",
                    "icon": self.icon,
-                   "command_topic": None,
+                   "command_topic": self.command_topic,
                    "force_update": True,
                    "name": self.name
                    }
@@ -32,6 +32,10 @@ class Switch(Sensor):
         payload["value_template"] = "{{ " + f"value_json.{self.name}" + " }}"
                    
         return payload
+    
+    @property
+    def command_topic(self):
+        return f"{self.discovery_prefix}/switch/{self.parent_uid}/{self.name}/set"
     
     @property
     def state(self):
