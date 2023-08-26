@@ -92,7 +92,7 @@ class DiscoverableDevice(MQTTClient):
         topic = topic.decode()
         msg = msg.decode()
         
-        print(f"received msg '{msg}'\non topic '{topic}'")
+        # print(f"received msg '{msg}'\non topic '{topic}'")
         if topic in self._switches:
             if msg == "ON":
                 self._switches[topic].on()
@@ -217,7 +217,6 @@ class DiscoverableDevice(MQTTClient):
             raise RuntimeError("Cannot add switch after discovery")
         if name in self.sensors:
             raise ValueError(f"Switch {name} already exists! Delete it or choose a different name.")
-        print(_class)
         switch = _class(*args, **kwargs, name=name, discovery_prefix=self.discovery_prefix, parent_uid=self.uid)
         
         self._switches[switch.command_topic] = switch
