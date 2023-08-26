@@ -61,7 +61,8 @@ if __name__ == "__main__":
                               host=s.mqtt["host"],
                               user=s.mqtt["user"],
                               password=s.mqtt["pass"],
-                              location="Desk")
+                              location="Desk",
+                              interval=5)
     
     # adding sensors and switches
     from SensorCPU import CPUTemp
