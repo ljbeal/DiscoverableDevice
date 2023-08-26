@@ -67,7 +67,8 @@ class DiscoverableDevice(MQTTClient):
         self._sensors = {}  # sensors by NAME
         self._switches = {}  # switches by TOPIC
         
-        self.add_sensor("ip", "mdi:ip-network", None, ip, wlan)
+        self.add_sensor("ip", "mdi:ip-network", None, constant, wlan.ifconfig()[0])
+        self.add_sensor("uid", "mdi:identifier", None, constant, self.uid)
         
         self.setup()
         
@@ -291,14 +292,14 @@ class DiscoverableDevice(MQTTClient):
                 self.setup()
             
 
-class ip(Sensor):
-    def __init__(self, wlan, *args, **kwargs):
+class constant(Sensor):
+    def __init__(self, value, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.wlan = wlan
+        self.value = value
         
     def read(self):
-        return self.wlan.ifconfig()[0]
+        return self.value
     
     
 if __name__ == "__main__":    
