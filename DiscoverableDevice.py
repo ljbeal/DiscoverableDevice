@@ -240,10 +240,7 @@ class DiscoverableDevice(MQTTClient):
             self.discover()
         
         # data to send, {topic: {payload}}
-        data = {}        
-        for sensor in self.sensors:            
-            # get the data
-            data[sensor.name] = sensor.read()
+        data = {sensor.name: sensor.read() for sensor in self.sensors}
             
         if not dry_run:
             print(data)  
