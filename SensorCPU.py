@@ -18,8 +18,6 @@ if __name__ == "__main__":
     test = CPUTemp(name="test",
                    icon="",
                    unit="C",
-                   discovery_prefix="",
                    parent_uid="")
     
     print(test.read())    
-
