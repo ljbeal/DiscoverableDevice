@@ -93,13 +93,19 @@ class DiscoverableDevice(MQTTClient):
         msg = msg.decode()
         
         # print(f"received msg '{msg}'\non topic '{topic}'")
+        data = {}
         if topic in self._switches:
+            switch = self._switches[topic]
+
             if msg == "ON":
-                self._switches[topic].on()
+                switch.on()
             else:
-                self._switches[topic].off()
-            # can we send data only for updated switches?
-            self.read_sensors()
+                switch.off()
+                
+            data[switch.name] = switch.read()
+
+        if len(data) != 0:
+            self.publish(self.state_topic, json.dumps(data))
     
     @property
     def state_topic(self):
@@ -274,6 +280,8 @@ class DiscoverableDevice(MQTTClient):
             except OSError:
                 print("OSError, reconnecting")
                 self.setup()
+
+            time.sleep(0.05)
             
 
 class constant(Sensor):
