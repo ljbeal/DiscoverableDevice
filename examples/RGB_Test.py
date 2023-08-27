@@ -65,8 +65,8 @@ if __name__ == "__main__":
                               interval=5)
     
     # adding sensors and switches
-    from SensorCPU import CPUTemp
-    from SwitchPicoLED import SwitchLED
+    from examples.SensorCPU import CPUTemp
+    from examples.SwitchPicoLED import SwitchLED
     
     test.add_sensor("cpu_temp", "mdi:thermometer", "C", CPUTemp)
     test.add_switch("BoardLED", SwitchLED)
