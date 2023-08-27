@@ -1,5 +1,5 @@
 class Sensor:
-    def __init__(self, name, icon, unit, discovery_prefix, parent_uid):
+    def __init__(self, name, icon, unit):
         
         if " " in name:
             raise ValueError("names cannot contain spaces")
@@ -7,9 +7,6 @@ class Sensor:
         self._name = name
         self._icon = icon
         self._unit = unit
-        
-        self._parent_uid = parent_uid
-        self._discovery_prefix = discovery_prefix
         
     @property
     def integration(self):
@@ -19,6 +16,18 @@ class Sensor:
     def discovery_prefix(self):
         return self._discovery_prefix
     
+    @discovery_prefix.setter
+    def discovery_prefix(self, prefix):
+        self._discovery_prefix = prefix
+
+    @property
+    def parent_uid(self):
+        return self._parent_uid
+    
+    @parent_uid.setter
+    def parent_iud(self, uid):
+        self._parent_uid = uid
+    
     @property
     def name(self):
         return self._name
@@ -26,10 +35,6 @@ class Sensor:
     @property
     def icon(self):
         return self._icon
-    
-    @property
-    def parent_uid(self):
-        return self._parent_uid
     
     @property
     def unit(self):

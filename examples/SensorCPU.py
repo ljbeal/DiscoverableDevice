@@ -17,8 +17,6 @@ class CPUTemp(Sensor):
 if __name__ == "__main__":
     test = CPUTemp(name="test",
                    icon="",
-                   unit="C",
-                   discovery_prefix="",
-                   parent_uid="")
+                   unit="C")
     
     print(test.read())    

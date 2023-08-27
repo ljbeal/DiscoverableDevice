@@ -202,13 +202,16 @@ class DiscoverableDevice(MQTTClient):
         if not icon.startswith("mdi:"):
             icon = "mdi:" + icon
 
-        self._sensors[name] = _class(*args,
-                                     **kwargs,
-                                     name=name,
-                                     icon=icon,
-                                     unit=unit,
-                                     discovery_prefix=self.discovery_prefix,
-                                     parent_uid=self.uid)
+        sensor = _class(*args,
+                        **kwargs,
+                        name=name,
+                        icon=icon,
+                        unit=unit)
+        
+        sensor.discovery_prefix = self.discovery_prefix
+        sensor.parent_uid = self.uid
+
+        self._sensors[name] = sensor
         
     def add_switch(self, name, _class, *args, **kwargs):
         """
@@ -218,7 +221,10 @@ class DiscoverableDevice(MQTTClient):
             raise RuntimeError("Cannot add switch after discovery")
         if name in self.sensors:
             raise ValueError(f"Switch {name} already exists! Delete it or choose a different name.")
-        switch = _class(*args, **kwargs, name=name, discovery_prefix=self.discovery_prefix, parent_uid=self.uid)
+        switch = _class(*args, **kwargs, name=name)
+        
+        switch.discovery_prefix = self.discovery_prefix
+        switch.parent_uid = self.uid
         
         self._switches[switch.command_topic] = switch
         

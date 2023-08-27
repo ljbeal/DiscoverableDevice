@@ -3,7 +3,7 @@ from Sensor import Sensor
 
 class Switch(Sensor):
     
-    def __init__(self, name, discovery_prefix, parent_uid):
+    def __init__(self, name):
         
         unit = None  # units don't make sense for a switch
         icon = "mdi:toggle-switch"  # enforce toggle for now
@@ -14,7 +14,7 @@ class Switch(Sensor):
         else:
             self._state = False
         
-        super().__init__(name, icon, unit, discovery_prefix, parent_uid)
+        super().__init__(name, icon, unit)
         
     @property
     def integration(self):
