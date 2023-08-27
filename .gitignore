@@ -3,3 +3,4 @@ __pycache__/*
 lib/*
 .micropico
 secrets.py
+DiscoverableDevice.code-workspace
