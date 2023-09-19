@@ -337,10 +337,14 @@ if __name__ == "__main__":
     from examples.SensorCPU import CPUTemp
     from examples.SwitchPicoLED import SwitchLED
 
+    from examples.MultiTest import BME280
+
     tmp = SwitchLED(name="temp")
     
     test.add_sensor("cpu_temp", CPUTemp)
     test.add_switch("BoardLED", SwitchLED)
+
+    test.add_sensor("BME280", BME280)
 
     # run indefinitely
     test.run()
