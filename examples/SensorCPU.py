@@ -3,6 +3,10 @@ from Sensor import Sensor
 import machine
 
 class CPUTemp(Sensor):
+    def __init__(self, name: str | list):
+        icon = "mdi:thermometer"
+        unit = "C"
+        super().__init__(name, icon, unit)
         
     def read(self):    
         adc = machine.ADC(4)
@@ -15,8 +19,6 @@ class CPUTemp(Sensor):
     
 
 if __name__ == "__main__":
-    test = CPUTemp(name="test",
-                   icon="",
-                   unit="C")
+    test = CPUTemp(name="test")
     
     print(test.read())    

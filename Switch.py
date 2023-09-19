@@ -3,10 +3,10 @@ from Sensor import Sensor
 
 class Switch(Sensor):
     
-    def __init__(self, names):
+    def __init__(self, name):
         
-        units = [None]  # units don't make sense for a switch
-        icons = ["mdi:toggle-switch"]  # enforce toggle for now
+        unit = None  # units don't make sense for a switch
+        icon = "mdi:toggle-switch"  # enforce toggle for now
         
         if hasattr(self, "setup"):
             # if we have a setup function that ensures an initial state, call it
@@ -14,37 +14,29 @@ class Switch(Sensor):
         else:
             self._state = False
         
-        super().__init__(names, icons, units)
+        super().__init__(name, icon, unit)
         
     @property
     def integration(self):
         return "switch"
     
     @property
-    def command_topics(self):
-        output = []
-        for name in self.names:
-            output.append(f"{self.discovery_prefix}/switch/{self.parent_uid}/{name}/set")
-
-        return output
+    def command_topic(self):        
+        return f"{self.discovery_prefix}/switch/{self.parent_uid}/{self.name}/set"
     
     def discover(self):
-        output = {}
-        for name, icon, ctopic in zip(self.names, self.icons, self.command_topics):
-            payload = {}
-                
-            payload["unique_id"] = f"{self.parent_uid}_{name}"
-            payload["icon"] = icon
-            payload["command_topic"] = ctopic
-            payload["name"] = name
+        payload = {}
             
-            payload["value_template"] = "{{ " + f"value_json.{name}" + " }}"
+        payload["unique_id"] = f"{self.parent_uid}_{self.name}"
+        payload["icon"] = self.icon
+        payload["command_topic"] = self.command_topic
+        payload["name"] = self.name
+        
+        payload["value_template"] = "{{ " + f"value_json.{self.name}" + " }}"
+        topic = f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{self.name}/config"
 
-            topic = f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{name}/config"
+        return payload
 
-            output[topic] = payload
-            
-        return output
     
     @property
     def state(self):

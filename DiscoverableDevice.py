@@ -68,8 +68,8 @@ class DiscoverableDevice(MQTTClient):
         self._switches = {}  # switches by ID
         self._command_topics = {}  # switch TOPIC -> ID link
         
-        self.add_sensor("IP", "mdi:ip-network", None, constant, wlan.ifconfig()[0])
-        self.add_sensor("UID", "mdi:identifier", None, constant, self.uid)
+        self.add_sensor("IP", constant, value=wlan.ifconfig()[0], icon="mdi:ip-network")
+        self.add_sensor("UID", constant, value=self.uid, icon="mdi:identifier")
         
         self.setup()
         
@@ -113,7 +113,7 @@ class DiscoverableDevice(MQTTClient):
 
         # if len(payload) != 0:
         #     self.publish(self.state_topic, json.dumps(payload))
-        
+
         # seems sending only updated data causes states to become empty
         self.read_sensors()
 
@@ -142,14 +142,15 @@ class DiscoverableDevice(MQTTClient):
         Iterate over all sensors and switches, sending their discovery payload to their discovery address
         """
         for sensor in self.sensors:
-            # need a separate discovery for each value a sensor can return
-            for topic, payload in sensor.discover().items():         
-                payload["device"] = self.device_payload
-                    
-                payload["state_topic"] = self.state_topic 
+            # need a separate discovery for each value a sensor can return                
+            payload = sensor.discover()
+            
+            payload["device"] = self.device_payload
                 
-                print(f"discovering on topic {topic}")
-                self.publish(topic, json.dumps(payload), retain=True)
+            payload["state_topic"] = self.state_topic 
+            
+            print(f"discovering on topic {sensor.discovery_topic}")
+            self.publish(sensor.discovery_topic, json.dumps(payload), retain=True)
         
         self._discovered = True
                 
@@ -190,17 +191,17 @@ class DiscoverableDevice(MQTTClient):
     def discovery_prefix(self):
         return self._discovery_prefix
         
-    def add_sensor(self, name: str, icon: str, unit: str | None, _class, *args, **kwargs):
+    def add_sensor(self, 
+                   name: str,
+                   _class, 
+                   *args,
+                   **kwargs):
         """
         Add a sensor at name `name`
         
         Args:
             name:
                 name for this sensor, must be unique
-            icon:
-                mdi icon for this sensor
-            unit:
-                units to use. Can be None
             _class:
                 sensor class. Just subclass Sensor and add a read() function, nothing more
         """
@@ -209,15 +210,8 @@ class DiscoverableDevice(MQTTClient):
         for sensor in self.sensors:
             if name in self.sensors:
                 raise ValueError(f"Sensor {name} already exists! Delete it or choose a different name.")
-            
-        if not icon.startswith("mdi:"):
-            icon = "mdi:" + icon
 
-        sensor = _class(*args,
-                        **kwargs,
-                        names=name,
-                        icons=icon,
-                        units=unit)
+        sensor = _class(*args, **kwargs, name=name)
         
         sensor.discovery_prefix = self.discovery_prefix
         sensor.parent_uid = self.uid
@@ -232,7 +226,7 @@ class DiscoverableDevice(MQTTClient):
             raise RuntimeError("Cannot add switch after discovery")
         if name in self.sensors:
             raise ValueError(f"Switch {name} already exists! Delete it or choose a different name.")
-        switch = _class(*args, **kwargs, names=name)
+        switch = _class(*args, **kwargs, name=name)
         
         switch.discovery_prefix = self.discovery_prefix
         switch.parent_uid = self.uid
@@ -240,11 +234,10 @@ class DiscoverableDevice(MQTTClient):
         idx = len(self._switches)
         self._switches[idx] = switch
         
-        for topic in switch.command_topics:
-            
-            self._command_topics[topic] = idx
-            print("subscribing to command topic", topic)
-            self.subscribe(topic)
+        topic = switch.command_topic
+        self._command_topics[topic] = idx
+        print("subscribing to command topic", topic)
+        self.subscribe(topic)
         
     def delete(self):
         """
@@ -274,7 +267,7 @@ class DiscoverableDevice(MQTTClient):
             if isinstance(data, dict):
                 payload.update(data)
             else:
-                payload[sensor.names[0]] = data
+                payload[sensor.name] = data
             
         if not dry_run:
             print(payload)  
@@ -314,7 +307,7 @@ class DiscoverableDevice(MQTTClient):
 
 class constant(Sensor):
     def __init__(self, value, *args, **kwargs):
-        
+    
         self.value = value
 
         super().__init__(*args, **kwargs)
@@ -323,7 +316,7 @@ class constant(Sensor):
         return self.value
     
     
-if __name__ == "__main__":
+if __name__ == "__main__":    
     print("boot") 
     import secrets as s
     
@@ -351,10 +344,12 @@ if __name__ == "__main__":
     # adding sensors and switches
     from examples.SensorCPU import CPUTemp
     from examples.SwitchPicoLED import SwitchLED
+
+    tmp = SwitchLED(name="temp")
     
-    test.add_sensor("cpu_temp", "mdi:thermometer", "C", CPUTemp)
+    test.add_sensor("cpu_temp", CPUTemp)
     test.add_switch("BoardLED", SwitchLED)
-    
+
     # run indefinitely
     test.run()
     

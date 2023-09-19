@@ -1,19 +1,12 @@
 class Sensor:
-    def __init__(self, 
-                 names: str | list, 
-                 icons: str | list | None, 
-                 units: str | list):
-        
-        names = ensure_list(names)
-        icons = ensure_list(icons)
-        units = ensure_list(units)
+    def __init__(self, name, icon = None, unit = None):
 
-        if any([" " in name for name in names]):
+        if " " in name:
             raise ValueError("names cannot contain spaces")
         
-        self._names = names
-        self._icons = icons
-        self._units = units
+        self._name = name
+        self._icon = icon
+        self._unit = unit
         
     @property
     def integration(self):
@@ -26,6 +19,10 @@ class Sensor:
     @discovery_prefix.setter
     def discovery_prefix(self, prefix):
         self._discovery_prefix = prefix
+        
+    @property
+    def discovery_topic(self):
+        return f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{self.name}/config"
 
     @property
     def parent_uid(self):
@@ -36,44 +33,38 @@ class Sensor:
         self._parent_uid = uid
     
     @property
-    def names(self):
-        return self._names
+    def name(self):
+        return self._name
     
     @property
-    def icons(self):
-        return self._icons
+    def icon(self):
+        return self._icon
     
     @property
-    def units(self):
-        return self._units
+    def unit(self):
+        return self._unit
     
     def value_template(self, name):
         return "{{ " + f"value_json.{name}" + " }}"
     
     def discover(self) -> dict:
         """
-        Generates a dict of {topic: payload} to send for discovery
+        Generates a dict to send for discovery
         """
-        output = {}
-        for name, icon, unit in zip(self.names, self.icons, self.units):
-            payload = {}
-            # not the right way to do it, but something about pylance hates a direct setup
-            payload["unique_id"] = f"{self.parent_uid}_{name}"
-            payload["icon"] = icon
-            payload["force_update"] = True
-            payload["name"] = name
-                        
-            if unit is not None:
-                payload["unit_of_measurement"] = unit
-                payload["value_template"] = "{{ " + f"value_json.{name}" + " | round(2) }}"
-            else:
-                payload["value_template"] = "{{ " + f"value_json.{name}" + " }}"
-
-            topic = f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{name}/config"
-
-            output[topic] = payload
+        payload = {}
+        # not the right way to do it, but something about pylance hates a direct setup
+        payload["unique_id"] = f"{self.parent_uid}_{self.name}"
+        payload["icon"] = self.icon
+        payload["force_update"] = True
+        payload["name"] = self.name
+                    
+        if self.unit is not None:
+            payload["unit_of_measurement"] = self.unit
+            payload["value_template"] = "{{ " + f"value_json.{self.name}" + " | round(2) }}"
+        else:
+            payload["value_template"] = "{{ " + f"value_json.{self.name}" + " }}"
             
-        return output
+        return payload
         
     def read(self):
         raise NotImplementedError
@@ -87,4 +78,4 @@ def ensure_list(input) -> list:
 
 
 if __name__ == "__main__":
-    test = Sensor(names="test", icons=None, units="")
+    test = Sensor(name="test")
