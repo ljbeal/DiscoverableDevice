@@ -104,16 +104,19 @@ class DiscoverableDevice(MQTTClient):
             else:
                 switch.off()
             
-            data = switch.read()
-            name = switch.names[0]
-            if isinstance(data, dict):
-                payload.update(data)
-            else:
-                payload[name] = data
+        #     data = switch.read()
+        #     name = switch.names[0]
+        #     if isinstance(data, dict):
+        #         payload.update(data)
+        #     else:
+        #         payload[name] = data
 
-        if len(payload) != 0:
-            self.publish(self.state_topic, json.dumps(payload))
-    
+        # if len(payload) != 0:
+        #     self.publish(self.state_topic, json.dumps(payload))
+        
+        # seems sending only updated data causes states to become empty
+        self.read_sensors()
+
     @property
     def state_topic(self):
         return f"{self._discovery_prefix}/sensor/{self.uid}/state"    
