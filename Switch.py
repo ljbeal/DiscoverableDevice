@@ -24,20 +24,6 @@ class Switch(Sensor):
     def command_topic(self):        
         return f"{self.discovery_prefix}/switch/{self.parent_uid}/{self.name}/set"
     
-    def discover(self):
-        payload = {}
-            
-        payload["unique_id"] = f"{self.parent_uid}_{self.name}"
-        payload["icon"] = self.icon
-        payload["command_topic"] = self.command_topic
-        payload["name"] = self.name
-        
-        payload["value_template"] = "{{ " + f"value_json.{self.name}" + " }}"
-        topic = f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{self.name}/config"
-
-        return payload
-
-    
     @property
     def state(self):
         return self._state

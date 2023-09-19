@@ -1,3 +1,5 @@
+import json
+
 class Sensor:
     def __init__(self, name, icon = None, unit = None):
 
@@ -23,6 +25,18 @@ class Sensor:
     @property
     def discovery_topic(self):
         return f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{self.name}/config"
+    
+    def discover(self, mqtt, device_payload, state_topic):
+        
+        # need a separate discovery for each value a sensor can return                
+        payload = self.discovery_payload
+
+        payload["device"] = device_payload
+            
+        payload["state_topic"] = state_topic 
+        
+        print(f"discovering on topic {self.discovery_topic}")
+        mqtt.publish(self.discovery_topic, json.dumps(payload), retain=True)
 
     @property
     def parent_uid(self):
@@ -47,7 +61,8 @@ class Sensor:
     def value_template(self, name):
         return "{{ " + f"value_json.{name}" + " }}"
     
-    def discover(self) -> dict:
+    @property
+    def discovery_payload(self) -> dict:
         """
         Generates a dict to send for discovery
         """

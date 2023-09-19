@@ -142,15 +142,7 @@ class DiscoverableDevice(MQTTClient):
         Iterate over all sensors and switches, sending their discovery payload to their discovery address
         """
         for sensor in self.sensors:
-            # need a separate discovery for each value a sensor can return                
-            payload = sensor.discover()
-            
-            payload["device"] = self.device_payload
-                
-            payload["state_topic"] = self.state_topic 
-            
-            print(f"discovering on topic {sensor.discovery_topic}")
-            self.publish(sensor.discovery_topic, json.dumps(payload), retain=True)
+            sensor.discover(self, self.device_payload, self.state_topic)
         
         self._discovered = True
                 
