@@ -33,7 +33,10 @@ class Sensor:
 
         payload["device"] = device_payload
             
-        payload["state_topic"] = state_topic 
+        payload["state_topic"] = state_topic
+
+        if hasattr(self, "command_topic"):
+            payload["command_topic"] = self.command_topic
         
         print(f"discovering on topic {self.discovery_topic}")
         mqtt.publish(self.discovery_topic, json.dumps(payload), retain=True)
