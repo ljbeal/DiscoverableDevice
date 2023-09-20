@@ -31,6 +31,6 @@ class Switch(Sensor):
     def read(self):
         return "ON" if self.state else "OFF"
     
-    def toggle(self):
+    def callback(self):
         raise NotImplementedError
     

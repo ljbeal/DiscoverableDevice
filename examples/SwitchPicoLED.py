@@ -31,12 +31,18 @@ class SwitchLED(Switch):
         self.led.value(0)
         self._state = False
 
+    def callback(self, msg):
+
+        if msg == "ON":
+            self.on()
+        else:
+            self.off()
+
 
 if __name__ == "__main__":
     import time
     
-    test = SwitchLED(name="test",
-                     parent_uid="")
+    test = SwitchLED(name="test")
     
     for i in range(10):
         time.sleep(1)

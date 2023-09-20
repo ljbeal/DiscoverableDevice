@@ -93,16 +93,13 @@ class DiscoverableDevice(MQTTClient):
         topic = topic.decode()
         msg = msg.decode()
         
-        # print(f"received msg '{msg}'\non topic '{topic}'")
+        print(f"received msg '{msg}'\non topic '{topic}'")
         payload = {}
         if topic in self._command_topics:
             idx = self._command_topics[topic]
             switch = self._switches[idx]
-
-            if msg == "ON":
-                switch.on()
-            else:
-                switch.off()
+            
+            switch.callback(msg)
             
         #     data = switch.read()
         #     name = switch.names[0]
