@@ -41,8 +41,7 @@ class BME280:
         return list(self._sensors.values())
 
     def discover(self, *args, **kwargs):
-        print(args)
-        print(kwargs)
+        
         for sensor in self.sensors:
             sensor.discover(*args, **kwargs)
 
