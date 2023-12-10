@@ -6,44 +6,17 @@ class BME280:
     """
     Sensor class for a module like a BME280, which returns multiple values per poll
     """
-    def __init__(self, name):
-
-        self._sensors = {
-            "temp": Sensor("temp", icon="mdi:thermometer", unit="C"),
-            "humidity": Sensor("humidity", icon="mdi:water-percent", unit="%"),
-            "pressure": Sensor("pressure", icon="mdi:weight", unit="hPa")
-        }
     
     @property
-    def discovery_prefix(self):
-        return self._discovery_prefix
-    
-    @discovery_prefix.setter
-    def discovery_prefix(self, prefix):
-        self._discovery_prefix = prefix
-
-        for sensor in self.sensors:
-            sensor.discovery_prefix = prefix
-
-    @property
-    def parent_uid(self):
-        return self._parent_uid
-    
-    @parent_uid.setter
-    def parent_uid(self, uid):
-        self._parent_uid = uid
-
-        for sensor in self.sensors:
-            sensor.parent_uid = uid
-
-    @property
-    def sensors(self):
-        return list(self._sensors.values())
-
-    def discover(self, *args, **kwargs):
+    def signature(self):
         
-        for sensor in self.sensors:
-            sensor.discover(*args, **kwargs)
+        return {"temp": {"icon": "mdi:thermometer",
+                         "unit": "C"},
+                "humidity": {"icon": "mdi:water-percent",
+                             "unit": "%"},
+                "pressure": {"icon": "mdi:weight",
+                             "unit": "hPa"},
+                }
 
     def read(self):
         return {"temp": 20 + random.randint(5, 15), 

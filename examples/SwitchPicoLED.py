@@ -5,11 +5,11 @@ from machine import Pin
 
 class SwitchLED(Switch):
     
-    def __init__(self, name, **kwargs):        
+    def __init__(self, name):        
         
         self._led = Pin("LED", Pin.OUT)
         
-        super().__init__(name, **kwargs)
+        super().__init__(name)
         
     @property
     def led(self):

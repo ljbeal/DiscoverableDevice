@@ -68,8 +68,11 @@ class DiscoverableDevice(MQTTClient):
         self._switches = {}  # switches by ID
         self._command_topics = {}  # switch TOPIC -> ID link
         
-        self.add_sensor("IP", constant, value=wlan.ifconfig()[0], icon="mdi:ip-network")
-        self.add_sensor("UID", constant, value=self.uid, icon="mdi:identifier")
+        ip = constant(name="IP", value=wlan.ifconfig()[0], icon="mdi:ip-network")
+        uid = constant(name="UID", value=self.uid, icon="mdi:identifier")
+
+        self.add_sensor(ip)
+        self.add_sensor(uid)
         
         self.setup()
         
@@ -180,42 +183,37 @@ class DiscoverableDevice(MQTTClient):
     def discovery_prefix(self):
         return self._discovery_prefix
         
-    def add_sensor(self, 
-                   name: str,
-                   _class, 
-                   *args,
-                   **kwargs):
+    def add_sensor(self,
+                   sensor):
         """
-        Add a sensor at name `name`
+        Add a sensor `sensor`
         
         Args:
-            name:
-                name for this sensor, must be unique
-            _class:
-                sensor class. Just subclass Sensor and add a read() function, nothing more
+            sensor:
+                sensor to store
         """
         if self.discovered:
             raise RuntimeError("Cannot add sensor after discovery")
-        for sensor in self.sensors:
-            if name in self.sensors:
-                raise ValueError(f"Sensor {name} already exists! Delete it or choose a different name.")
-
-        sensor = _class(*args, **kwargs, name=name)
+        
+        name = sensor.name
+        if name in self.sensors:
+            raise ValueError(f"Sensor {name} already exists! Delete it or choose a different name.")
         
         sensor.discovery_prefix = self.discovery_prefix
         sensor.parent_uid = self.uid
 
         self._sensors[name] = sensor
         
-    def add_switch(self, name, _class, *args, **kwargs):
+    def add_switch(self, switch):
         """
-        Just as with add_sensor, add a sensor at name.
+        Just as with add_sensor, add a switch.
         """
         if self.discovered:
             raise RuntimeError("Cannot add switch after discovery")
+        
+        name = switch.name
         if name in self.sensors:
             raise ValueError(f"Switch {name} already exists! Delete it or choose a different name.")
-        switch = _class(*args, **kwargs, name=name)
         
         switch.discovery_prefix = self.discovery_prefix
         switch.parent_uid = self.uid
@@ -250,13 +248,11 @@ class DiscoverableDevice(MQTTClient):
         
         # data to send, {topic: {payload}}
         payload = {}
-        for sensor in self.sensors:
-            data = sensor.read()
+        for sensor in self.sensors:            
 
-            if isinstance(data, dict):
-                payload.update(data)
-            else:
-                payload[sensor.name] = data
+            val = sensor.read()
+
+            payload.update(val)
             
         if not dry_run:
             print(payload)  
@@ -295,14 +291,22 @@ class DiscoverableDevice(MQTTClient):
             
 
 class constant(Sensor):
-    def __init__(self, value, *args, **kwargs):
-    
+    def __init__(self, name, value, unit=None, icon=None):
+        
+        self.unit = unit
+        self.icon = icon
         self.value = value
 
-        super().__init__(*args, **kwargs)
+        super().__init__(name)
+    
+    @property
+    def signature(self):
+        return {self.name: {"icon": self.icon,
+                            "unit": self.unit}
+                }
         
     def read(self):
-        return self.value
+        return {self.name: self.value}
     
     
 if __name__ == "__main__":    
@@ -335,13 +339,15 @@ if __name__ == "__main__":
     from examples.SwitchPicoLED import SwitchLED
 
     from examples.MultiTest import BME280
-
-    tmp = SwitchLED(name="temp")
     
-    test.add_sensor("cpu_temp", CPUTemp)
-    test.add_switch("BoardLED", SwitchLED)
-
-    test.add_sensor("BME280", BME280)
+    cputemp = CPUTemp(name="cputemp")
+    test.add_sensor(cputemp)
+    
+    ledswitch = SwitchLED("BoardLED")
+    test.add_switch(ledswitch)
+    
+#     bme = BME280("BME280")
+#     test.add_sensor(bme)
 
     # run indefinitely
     test.run()

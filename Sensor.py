@@ -1,14 +1,12 @@
 import json
 
 class Sensor:
-    def __init__(self, name, icon = None, unit = None):
+    def __init__(self, name):
 
         if " " in name:
             raise ValueError("names cannot contain spaces")
         
         self._name = name
-        self._icon = icon
-        self._unit = unit
         
     @property
     def integration(self):
@@ -28,18 +26,25 @@ class Sensor:
     
     def discover(self, mqtt, device_payload, state_topic):
         
-        # need a separate discovery for each value a sensor can return                
-        payload = self.discovery_payload
-
-        payload["device"] = device_payload
+        # need a separate discovery for each value a sensor can return
+        for subsensor in self.signature:
+            print(f"discovering for subsensor {subsensor}")
+            sig = self.signature[subsensor]
             
-        payload["state_topic"] = state_topic
+            icon = sig.get("icon", None)
+            unit = sig.get("unit", None)
+            
+            payload = self.discovery_payload(icon, unit)
+            
+            payload["device"] = device_payload
+                
+            payload["state_topic"] = state_topic
 
-        if hasattr(self, "command_topic"):
-            payload["command_topic"] = self.command_topic
-        
-        print(f"discovering on topic {self.discovery_topic}")
-        mqtt.publish(self.discovery_topic, json.dumps(payload), retain=True)
+            if hasattr(self, "command_topic"):
+                payload["command_topic"] = self.command_topic
+            
+            print(f"discovering on topic {self.discovery_topic}")
+            mqtt.publish(self.discovery_topic, json.dumps(payload), retain=True)
 
     @property
     def parent_uid(self):
@@ -53,38 +58,33 @@ class Sensor:
     def name(self):
         return self._name
     
-    @property
-    def icon(self):
-        return self._icon
-    
-    @property
-    def unit(self):
-        return self._unit
-    
     def value_template(self, name):
         return "{{ " + f"value_json.{name}" + " }}"
     
-    @property
-    def discovery_payload(self) -> dict:
+    def discovery_payload(self, icon, unit) -> dict:
         """
         Generates a dict to send for discovery
         """
         payload = {}
         # not the right way to do it, but something about pylance hates a direct setup
         payload["unique_id"] = f"{self.parent_uid}_{self.name}"
-        payload["icon"] = self.icon
+        payload["icon"] = icon
         payload["force_update"] = True
         payload["name"] = self.name
                     
-        if self.unit is not None:
-            payload["unit_of_measurement"] = self.unit
+        if unit is not None:
+            payload["unit_of_measurement"] = unit
             payload["value_template"] = "{{ " + f"value_json.{self.name}" + " | round(2) }}"
         else:
             payload["value_template"] = "{{ " + f"value_json.{self.name}" + " }}"
             
         return payload
+    
+    @property
+    def signature(self) -> dict:
+        raise NotImplementedError
         
-    def read(self):
+    def read(self) -> dict:
         raise NotImplementedError
     
 

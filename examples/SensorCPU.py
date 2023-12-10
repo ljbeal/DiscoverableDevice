@@ -3,10 +3,12 @@ from Sensor import Sensor
 import machine
 
 class CPUTemp(Sensor):
-    def __init__(self, name: str | list):
-        icon = "mdi:thermometer"
-        unit = "C"
-        super().__init__(name, icon, unit)
+    
+    @property
+    def signature(self):
+        return {"cputemp": {"icon": "mdi:thermometer",
+                            "unit": "C"}
+                }
         
     def read(self):    
         adc = machine.ADC(4)
@@ -15,7 +17,7 @@ class CPUTemp(Sensor):
         
         temp_c = 27 - ( voltage - 0.706) / 0.001721
         
-        return temp_c
+        return {"cputemp": temp_c}
     
 
 if __name__ == "__main__":
