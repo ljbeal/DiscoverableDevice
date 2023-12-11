@@ -1,4 +1,4 @@
-from Sensor import Sensor
+from .Sensor import Sensor
 
 
 class Switch(Sensor):
