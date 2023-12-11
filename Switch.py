@@ -21,7 +21,6 @@ class Switch(Sensor):
     def command_topic(self):        
         return f"{self.discovery_prefix}/switch/{self.parent_uid}/{self.name}/set"
     
-    @property
     def discovery_payload(self, icon, unit):
         """
         Generates a dict to send for discovery
