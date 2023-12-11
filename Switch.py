@@ -21,16 +21,11 @@ class Switch(Sensor):
     def command_topic(self):        
         return f"{self.discovery_prefix}/switch/{self.parent_uid}/{self.name}/set"
     
-    def discovery_payload(self, icon, unit):
+    def discovery_payload(self, *args, **kwargs):
         """
         Generates a dict to send for discovery
         """
-        payload = {}
-        # not the right way to do it, but something about pylance hates a direct setup
-        payload["unique_id"] = f"{self.parent_uid}_{self.name}"
-        payload["icon"] = icon
-        payload["force_update"] = True
-        payload["name"] = self.name
+        payload = super().discovery_payload(*args, **kwargs)
         
         payload["value_template"] = "{{ " + f"value_json.{self.name}_state" + " }}"
         
