@@ -9,7 +9,7 @@ import json
 import time
 
 
-__version__ = "0.0.6"
+__version__ = "0.1.0"
 
 
 class DiscoverableDevice(MQTTClient):
@@ -346,8 +346,8 @@ if __name__ == "__main__":
     ledswitch = SwitchLED("BoardLED")
     test.add_switch(ledswitch)
     
-#     bme = BME280("BME280")
-#     test.add_sensor(bme)
+    bme = BME280("BME280")
+    test.add_sensor(bme)
 
     # run indefinitely
     test.run()
