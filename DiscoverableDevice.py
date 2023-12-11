@@ -1,4 +1,4 @@
-from Sensor import Sensor
+from .Sensor import Sensor
 
 from umqtt.simple import MQTTClient, MQTTException
 
@@ -9,7 +9,7 @@ import json
 import time
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 class DiscoverableDevice(MQTTClient):
@@ -73,6 +73,8 @@ class DiscoverableDevice(MQTTClient):
 
         self.add_sensor(ip)
         self.add_sensor(uid)
+        
+        self._data = {}
         
         self.setup()
         
@@ -248,8 +250,7 @@ class DiscoverableDevice(MQTTClient):
         
         # data to send, {topic: {payload}}
         payload = {}
-        for sensor in self.sensors:            
-
+        for sensor in self.sensors:
             val = sensor.read()
 
             payload.update(val)
@@ -259,6 +260,12 @@ class DiscoverableDevice(MQTTClient):
             self.publish(self.state_topic, json.dumps(payload))
         else:
             print(payload)
+            
+        self._data = payload
+            
+    @property
+    def data(self):
+        return self._data
             
     @property
     def interval(self):
