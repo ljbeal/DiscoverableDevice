@@ -20,9 +20,13 @@ class Sensor:
     def discovery_prefix(self, prefix):
         self._discovery_prefix = prefix
         
-    @property
-    def discovery_topic(self):
-        return f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{self.name}/config"
+    def discovery_topic(self, subsensor=None):
+        if subsensor is None:
+            name = self.name
+        else:
+            name = f"{self.name}_{subsensor}"
+            
+        return f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{name}/config"
     
     def discover(self, mqtt, device_payload, state_topic):
         
@@ -34,7 +38,7 @@ class Sensor:
             icon = sig.get("icon", None)
             unit = sig.get("unit", None)
             
-            payload = self.discovery_payload(icon, unit)
+            payload = self.discovery_payload(subsensor, icon, unit)
             
             payload["device"] = device_payload
                 
@@ -43,8 +47,11 @@ class Sensor:
             if hasattr(self, "command_topic"):
                 payload["command_topic"] = self.command_topic
             
-            print(f"discovering on topic {self.discovery_topic}")
-            mqtt.publish(self.discovery_topic, json.dumps(payload), retain=True)
+            discovery_topic = self.discovery_topic(subsensor)
+            
+            print(f"discovering on topic {discovery_topic}")
+            print(f"sending payload: {json.dumps(payload)}")
+            mqtt.publish(discovery_topic, json.dumps(payload), retain=True)
 
     @property
     def parent_uid(self):
@@ -61,22 +68,34 @@ class Sensor:
     def value_template(self, name):
         return "{{ " + f"value_json.{name}" + " }}"
     
-    def discovery_payload(self, icon, unit) -> dict:
+    def discovery_payload(self, name, icon, unit) -> dict:
         """
         Generates a dict to send for discovery
+        
+        args:
+            name (str):
+                subsensor name as specified by signature
+            icon (str):
+                mdi icon code
+            unit (str):
+                measurement unit
+                
+        returns:
+            dict:
+                discovery payload
         """
         payload = {}
         # not the right way to do it, but something about pylance hates a direct setup
-        payload["unique_id"] = f"{self.parent_uid}_{self.name}"
+        payload["unique_id"] = f"{self.parent_uid}_{self.name}_{name}"
         payload["icon"] = icon
         payload["force_update"] = True
-        payload["name"] = self.name
+        payload["name"] = f"{self.name}_{name}"
                     
         if unit is not None:
             payload["unit_of_measurement"] = unit
-            payload["value_template"] = "{{ " + f"value_json.{self.name}" + " | round(2) }}"
+            payload["value_template"] = "{{ " + f"value_json.{name}" + " | round(2) }}"
         else:
-            payload["value_template"] = "{{ " + f"value_json.{self.name}" + " }}"
+            payload["value_template"] = "{{ " + f"value_json.{name}" + " }}"
             
         return payload
     
