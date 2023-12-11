@@ -2,14 +2,13 @@ import random
 from Sensor import Sensor
 
 
-class BME280:
+class BME280(Sensor):
     """
     Sensor class for a module like a BME280, which returns multiple values per poll
     """
     
     @property
-    def signature(self):
-        
+    def signature(self):        
         return {"temp": {"icon": "mdi:thermometer",
                          "unit": "C"},
                 "humidity": {"icon": "mdi:water-percent",
