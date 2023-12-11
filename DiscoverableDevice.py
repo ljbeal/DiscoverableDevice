@@ -105,18 +105,7 @@ class DiscoverableDevice(MQTTClient):
             switch = self._switches[idx]
             
             switch.callback(msg)
-            
-        #     data = switch.read()
-        #     name = switch.names[0]
-        #     if isinstance(data, dict):
-        #         payload.update(data)
-        #     else:
-        #         payload[name] = data
 
-        # if len(payload) != 0:
-        #     self.publish(self.state_topic, json.dumps(payload))
-
-        # seems sending only updated data causes states to become empty
         self.read_sensors()
 
     @property
