@@ -68,8 +68,8 @@ class DiscoverableDevice(MQTTClient):
         self._switches = {}  # switches by ID
         self._command_topics = {}  # switch TOPIC -> ID link
         
-        ip = constant(name="IP", value=wlan.ifconfig()[0], icon="mdi:ip-network")
-        uid = constant(name="UID", value=self.uid, icon="mdi:identifier")
+        ip = constant(name="Network", subname="IP", value=wlan.ifconfig()[0], icon="mdi:ip-network")
+        uid = constant(name="Device", subname="UID", value=self.uid, icon="mdi:identifier")
 
         self.add_sensor(ip)
         self.add_sensor(uid)
@@ -287,63 +287,22 @@ class DiscoverableDevice(MQTTClient):
             
 
 class constant(Sensor):
-    def __init__(self, name, value, unit=None, icon=None):
+    def __init__(self, name, value, subname=None, unit=None, icon=None):
         
         self.unit = unit
         self.icon = icon
         self.value = value
+        
+        self.displayname = subname or name
 
         super().__init__(name)
     
     @property
     def signature(self):
-        return {self.name: {"icon": self.icon,
-                            "unit": self.unit}
+        return {self.displayname: {"icon": self.icon,
+                                   "unit": self.unit}
                 }
         
     def read(self):
-        return {self.name: self.value}
-    
-    
-if __name__ == "__main__":    
-    print("boot") 
-    import secrets as s
-    
-    import rp2
-    import network
-    
-    rp2.country('FR')
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-        
-    print("Connecting\nto WiFi")
-    wlan.connect(s.wifi["ssid"], s.wifi["pass"])
+        return {self.displayname: self.value}
 
-    while not wlan.isconnected() and wlan.status() >= 0:
-        time.sleep(1)
-        
-    print("wifi connected")
-    
-    test = DiscoverableDevice(wlan,
-                              host=s.mqtt["host"],
-                              user=s.mqtt["user"],
-                              password=s.mqtt["pass"],
-                              location="Desk")
-    
-    # adding sensors and switches
-    from examples.SensorCPU import CPUTemp
-    from examples.SwitchPicoLED import SwitchLED
-
-    from examples.MultiTest import BME280
-    
-    cputemp = CPUTemp(name="cputemp")
-    test.add_sensor(cputemp)
-    
-    ledswitch = SwitchLED("BoardLED")
-    test.add_switch(ledswitch)
-    
-    bme = BME280("BME280")
-    test.add_sensor(bme)
-
-    # run indefinitely
-    test.run()
