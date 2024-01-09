@@ -18,7 +18,7 @@ class Switch(Sensor):
         return "switch"
     
     @property
-    def command_topic(self):        
+    def command_topic(self):
         return f"{self.discovery_prefix}/switch/{self.parent_uid}/{self.name}/set"
     
     def discovery_payload(self, *args, **kwargs):
@@ -47,4 +47,3 @@ class Switch(Sensor):
     
     def callback(self):
         raise NotImplementedError
-    

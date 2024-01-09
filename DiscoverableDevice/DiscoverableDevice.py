@@ -8,7 +8,6 @@ import ubinascii
 import json
 import time
 
-
 __version__ = "0.1.1"
 
 
@@ -133,6 +132,7 @@ class DiscoverableDevice(MQTTClient):
         Iterate over all sensors and switches, sending their discovery payload to their discovery address
         """
         for sensor in self.sensors:
+            print(f"discovering for sensor {sensor}")
             sensor.discover(self, self.device_payload, self.state_topic)
         
         self._discovered = True

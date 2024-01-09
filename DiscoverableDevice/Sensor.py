@@ -29,7 +29,6 @@ class Sensor:
         return f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{name}/config"
     
     def discover(self, mqtt, device_payload, state_topic):
-        
         # need a separate discovery for each value a sensor can return
         for subsensor in self.signature:
             print(f"discovering for subsensor {subsensor}")
@@ -44,8 +43,30 @@ class Sensor:
                 
             payload["state_topic"] = state_topic
 
-            if hasattr(self, "command_topic"):
-                payload["command_topic"] = self.command_topic
+            extra_topics = ["command_topic",
+                            "payload_on",
+                            "payload_off",
+                            "on_command_type",
+                            "hs_command_topic",
+                            "hs_state_topic",
+                            "hs_value_template",
+                            "rgb_command_topic",
+                            "rgb_state_topic",
+                            "rgb_value_template,"
+                            "brightness_command_topic",
+                            "brightness_state_topic",
+                            "brightness_value_template",
+                            ]
+
+            for topic in extra_topics:
+                addition = getattr(self, topic, None)
+
+                if addition is None:
+                    continue
+
+                print(f"adding extra data at {topic}: {addition}")
+
+                payload[topic] = addition
             
             discovery_topic = self.discovery_topic(subsensor)
             
