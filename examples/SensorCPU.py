@@ -1,4 +1,4 @@
-from Sensor import Sensor
+from DiscoverableDevice.Sensor import Sensor
 
 import machine
 

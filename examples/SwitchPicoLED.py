@@ -1,4 +1,4 @@
-from Switch import Switch
+from DiscoverableDevice.Switch import Switch
 
 from machine import Pin
 
@@ -18,25 +18,10 @@ class SwitchLED(Switch):
     def setup(self):
         self._state = self.led.value() == 1
         print(f"led setup, initial state {self.state}")
-    
-    def toggle(self):
-        self.led.toggle()
-        self._state = self.state == False
-        
-    def on(self):
-        self.led.value(1)
-        self._state = True
-        
-    def off(self):
-        self.led.value(0)
-        self._state = False
 
     def callback(self, msg):
-
-        if msg == "ON":
-            self.on()
-        else:
-            self.off()
+        
+        print(msg)
 
 
 if __name__ == "__main__":
