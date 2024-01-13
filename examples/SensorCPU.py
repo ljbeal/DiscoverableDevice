@@ -23,6 +23,10 @@ class CPUTemp(Sensor):
     def value_template(self):
         return "{{ " + f"value_json.cputemp | round(2)" + " }}"
     
+    @property
+    def extra_discovery_fields(self):
+        return {"unit_of_measurement": "C"}
+    
 
 if __name__ == "__main__":
     test = CPUTemp(name="test")
