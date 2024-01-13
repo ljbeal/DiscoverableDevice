@@ -43,6 +43,9 @@ class Sensor:
                 
             payload["state_topic"] = state_topic
 
+            if hasattr(self, "command_topic"):
+                payload["command_topic"] = self.command_topic
+
             if hasattr(self, "extra_discovery_fields"):
                 for topic, value in self.extra_discovery_fields.items():
 
