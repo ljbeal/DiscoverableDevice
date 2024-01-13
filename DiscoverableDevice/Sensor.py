@@ -86,9 +86,6 @@ class Sensor:
     def name(self):
         return self._name
     
-    def value_template(self, name):
-        return "{{ " + f"value_json.{name}" + " }}"
-    
     def discovery_payload(self, name, icon, unit) -> dict:
         """
         Generates a dict to send for discovery
@@ -114,7 +111,10 @@ class Sensor:
                     
         if unit is not None:
             payload["unit_of_measurement"] = unit
-            payload["value_template"] = "{{ " + f"value_json.{name}" + " | round(2) }}"
+
+        if hasattr(self, "value_template"):
+            payload["value_template"] = self.value_template
+            print(f"value template set to {self.value_template}")
         else:
             payload["value_template"] = "{{ " + f"value_json.{name}" + " }}"
             

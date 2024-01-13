@@ -27,8 +27,6 @@ class Switch(Sensor):
         """
         payload = super().discovery_payload(*args, **kwargs)
         
-        payload["value_template"] = "{{ " + f"value_json.{self.name}_state" + " }}"
-        
         return payload
     
     @property
