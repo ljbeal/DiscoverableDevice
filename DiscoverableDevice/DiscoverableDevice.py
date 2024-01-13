@@ -8,7 +8,10 @@ import ubinascii
 import json
 import time
 
-__version__ = "0.1.1"
+__version__ = "0.1.4"
+
+
+RETRY_INTERVAL = 5  # time to wait on a failed MQTT interaction before retrying
 
 
 class DiscoverableDevice(MQTTClient):
@@ -86,8 +89,8 @@ class DiscoverableDevice(MQTTClient):
         try:
             self.connect()
         except OSError:
-            print("failure to connect, waiting 5s and retrying")
-            time.sleep(5)
+            print(f"failure to connect, waiting {RETRY_INTERVAL}s and retrying")
+            time.sleep(RETRY_INTERVAL)
             
             self.setup()
         
@@ -96,6 +99,10 @@ class DiscoverableDevice(MQTTClient):
         statustopic = "homeassistant/status"
         print(f"subscribing to status topic {statustopic}")
         self.subscribe(statustopic)
+        
+        for sensor in self.sensors:
+            if hasattr(sensor, "command_topic"):
+                self.subscribe(sensor.command_topic)
             
     def callback(self, topic, msg):
         """
@@ -262,7 +269,7 @@ class DiscoverableDevice(MQTTClient):
         This will "freeze" the class in place, blocking further additions.
         """
         if not self.broker_alive:
-            print("Broker has not returned, skipping read.")
+            print("Broker is offline, skipping read.")
             return
 
         if not self.discovered:
@@ -315,7 +322,15 @@ class DiscoverableDevice(MQTTClient):
                 self.setup()
 
             time.sleep(0.05)
-            
+    
+    def publish(self, *args, **kwargs):
+        try:
+            super().publish(*args, **kwargs)
+        except OSError:
+            print(f"failed to publish, retrying in {RETRY_INTERVAL}s")
+            time.sleep(RETRY_INTERVAL)
+            self.publish(*args, **kwargs)
+
 
 class constant(Sensor):
     def __init__(self, name, value, subname=None, unit=None, icon=None):
@@ -336,4 +351,3 @@ class constant(Sensor):
         
     def read(self):
         return {self.displayname: self.value}
-
