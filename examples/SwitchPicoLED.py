@@ -15,13 +15,18 @@ class SwitchLED(Switch):
     def led(self):
         return self._led
     
+    @property
+    def state(self) -> bool:
+        return self.led.value() == 1
+    
     def setup(self):
-        self._state = self.led.value() == 1
         print(f"led setup, initial state {self.state}")
 
     def callback(self, msg):
-        
-        print(msg)
+        if msg == "ON":
+            self.led.on()
+        else:
+            self.led.off()
 
 
 if __name__ == "__main__":
