@@ -62,6 +62,8 @@ class DiscoverableDevice(MQTTClient):
         self._discovered = False
         
         self._interval = interval
+        # used for last will/birth detection
+        self._broker_alive = True
         
         self._sensors = {}  # sensors by NAME
         self._switches = {}  # switches by ID
@@ -81,11 +83,19 @@ class DiscoverableDevice(MQTTClient):
         """
         Performs some initial setup, connecting and setting the callback
         """
-        self.connect()
+        try:
+            self.connect()
+        except OSError:
+            print("failure to connect, waiting 5s and retrying")
+            time.sleep(5)
+            
+            self.setup()
         
         self.cb = self.callback
         
-        self.subscribe(b"cmdtest")
+        statustopic = "homeassistant/status"
+        print(f"subscribing to status topic {statustopic}")
+        self.subscribe(statustopic)
             
     def callback(self, topic, msg):
         """
@@ -98,6 +108,19 @@ class DiscoverableDevice(MQTTClient):
         msg = msg.decode()
         
         print(f"received msg '{msg}'\non topic '{topic}'")
+
+        if msg == 'online':
+            print("Broker reports that it is online")
+            if not self.broker_alive:
+                print("Broker currently offline, rediscovering")
+                self.discover()
+
+            self._broker_alive = True
+
+        elif msg == 'offline':
+            print("Broker reports that it is going offline")
+            self._broker_alive = False
+
         payload = {}
         if topic in self._command_topics:
             idx = self._command_topics[topic]
@@ -106,6 +129,10 @@ class DiscoverableDevice(MQTTClient):
             switch.callback(msg)
 
         self.read_sensors()
+
+    @property
+    def broker_alive(self):
+        return self._broker_alive
 
     @property
     def state_topic(self):
@@ -234,6 +261,10 @@ class DiscoverableDevice(MQTTClient):
         
         This will "freeze" the class in place, blocking further additions.
         """
+        if not self.broker_alive:
+            print("Broker has not returned, skipping read.")
+            return
+
         if not self.discovered:
             self.discover()
         
