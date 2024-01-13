@@ -19,6 +19,10 @@ class CPUTemp(Sensor):
         
         return {"cputemp": temp_c}
     
+    @property
+    def value_template(self):
+        return "{{ " + f"value_json.{self.name} | float" + " }}"
+    
 
 if __name__ == "__main__":
     test = CPUTemp(name="test")
