@@ -380,5 +380,18 @@ class constant(Sensor):
                                    "unit": self.unit}
                 }
         
+    @property
+    def value_template(self):
+        return "{{ " + f"value_json.{self.displayname}" + " }}"
+    
+    @property
+    def extra_discovery_fields(self):
+        output = {}
+        if self.unit is not None:
+            output["unit"] = unit
+            
+        return output
+        
     def read(self):
         return {self.displayname: self.value}
+

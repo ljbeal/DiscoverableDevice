@@ -51,28 +51,25 @@ class Dimmer(Switch):
 
             self.duty = val / 255
             
-        except AttributeError:
+        except ValueError:
             print(f"could not parse message {msg}")
+            
+            if msg == "OFF":
+                self.duty = 0
     
-    def read(self):
-        state = "ON" if self.duty > 0.0 else "OFF"
-        
-        return {f"{self.name}_state": state, 
-                f"{self.name}_brightness": round(self.duty * 255)}
-    
-    @property
-    def value_template(self):
-        return "{{ " +  f"value_json.{self.name}_state" + " }}"
+    def read(self):        
+        return {f"{self.name}_brightness": round(self.duty * 255)}
     
     @property
     def extra_discovery_fields(self):
-        return {"brightness_value_template": "{{ " +  f"value_json.{self.name}_brightness | int" + " }}",
+        return {"brightness_value_template": "{{ " +  f"value_json.{self.name}_brightness" + " }}",
                 "brightness_state_topic": self.state_topic,
                 "brightness_command_topic": self.command_topic,
                 "brightness": True,
                 "effect": True,
                 "effect_list": ["solid"],
                 "on_command_type": "brightness",
+                "payload_off": "OFF",
                 }
 
 

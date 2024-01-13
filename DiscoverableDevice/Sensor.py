@@ -57,11 +57,20 @@ class Sensor:
             icon = sig.get("icon", None)
             unit = sig.get("unit", None)
             
-            payload = self.discovery_payload(subsensor, icon, unit)
+            payload = {}
+            # not the right way to do it, but something about pylance hates a direct setup
+            payload["unique_id"] = f"{self.parent_uid}_{self.name}_{subsensor}"
+            payload["icon"] = icon
+            payload["force_update"] = True
+            payload["name"] = f"{self.name}_{subsensor}"
             
             payload["device"] = device_payload
                 
             payload["state_topic"] = self.state_topic
+
+            if hasattr(self, "value_template"):
+                payload["value_template"] = self.value_template
+                print(f"value template set to {self.value_template}")
 
             if hasattr(self, "command_topic"):
                 payload["command_topic"] = self.command_topic
@@ -80,40 +89,6 @@ class Sensor:
             print(f"sending payload: {json.dumps(payload)}")
             mqtt.publish(discovery_topic, json.dumps(payload), retain=True)
     
-    def discovery_payload(self, name, icon, unit) -> dict:
-        """
-        Generates a dict to send for discovery
-        
-        args:
-            name (str):
-                subsensor name as specified by signature
-            icon (str):
-                mdi icon code
-            unit (str):
-                measurement unit
-                
-        returns:
-            dict:
-                discovery payload
-        """
-        payload = {}
-        # not the right way to do it, but something about pylance hates a direct setup
-        payload["unique_id"] = f"{self.parent_uid}_{self.name}_{name}"
-        payload["icon"] = icon
-        payload["force_update"] = True
-        payload["name"] = f"{self.name}_{name}"
-                    
-        if unit is not None:
-            payload["unit_of_measurement"] = unit
-
-        if hasattr(self, "value_template"):
-            payload["value_template"] = self.value_template
-            print(f"value template set to {self.value_template}")
-        else:
-            payload["value_template"] = "{{ " + f"value_json.{name}" + " }}"
-            
-        return payload
-    
     @property
     def signature(self) -> dict:
         raise NotImplementedError
@@ -131,3 +106,4 @@ def ensure_list(input) -> list:
 
 if __name__ == "__main__":
     test = Sensor(name="test")
+
