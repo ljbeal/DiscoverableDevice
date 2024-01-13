@@ -43,30 +43,12 @@ class Sensor:
                 
             payload["state_topic"] = state_topic
 
-            extra_topics = ["command_topic",
-                            "payload_on",
-                            "payload_off",
-                            "on_command_type",
-                            "hs_command_topic",
-                            "hs_state_topic",
-                            "hs_value_template",
-                            "rgb_command_topic",
-                            "rgb_state_topic",
-                            "rgb_value_template,"
-                            "brightness_command_topic",
-                            "brightness_state_topic",
-                            "brightness_value_template",
-                            ]
+            if hasattr(self, "extra_discovery_fields"):
+                for topic, value in self.extra_discovery_fields.items():
 
-            for topic in extra_topics:
-                addition = getattr(self, topic, None)
+                    print(f"adding extra data at {topic}: {value}")
 
-                if addition is None:
-                    continue
-
-                print(f"adding extra data at {topic}: {addition}")
-
-                payload[topic] = addition
+                    payload[topic] = value
             
             discovery_topic = self.discovery_topic(subsensor)
             
