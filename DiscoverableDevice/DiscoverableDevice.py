@@ -13,6 +13,7 @@ __version__ = "0.1.5"
 
 RETRY_INTERVAL = 5  # time to wait on a failed MQTT interaction before retrying
 RETRY_COUNT = 10
+RESET_THRESHOLD = 10
 
 
 class DiscoverableDevice(MQTTClient):
@@ -69,6 +70,7 @@ class DiscoverableDevice(MQTTClient):
         # used for last will/birth detection
         self._broker_alive = True
         self._connection_failure_count = 0
+        self._read_failure_count = 0
         
         self._sensors = {}  # sensors by NAME
         self._switches = {}  # switches by ID
@@ -275,11 +277,20 @@ class DiscoverableDevice(MQTTClient):
         This will "freeze" the class in place, blocking further additions.
         """
         if not self.broker_alive:
-            print("Broker is offline, skipping read.")
+            print("Broker is offline ({self._read_failure_count} times), attemting setup instead of read")
+            
+            self._read_failure_count += 1
+            
+            if self._read_failure_count > RESET_THRESHOLD:
+                print("RESET_THRESHOLD crossed, resetting the board")
+                machine.reset()
+            
             return
 
         if not self.discovered:
             self.discover()
+            
+        self._read_failure_count = 0
         
         # data to send, {topic: {payload}}
         payload = {}
