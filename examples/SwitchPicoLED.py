@@ -27,6 +27,16 @@ class SwitchLED(Switch):
             self.led.on()
         else:
             self.led.off()
+    
+    def read(self):
+        state = "ON" if self.state else "OFF"
+        
+        name = f"{self.name}_state"
+        return {name: state}
+    
+    @property
+    def value_template(self):
+        return "{{ " +  f"value_json.{self.name}_state" + " }}"
 
 
 if __name__ == "__main__":
