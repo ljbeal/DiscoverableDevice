@@ -8,10 +8,11 @@ import ubinascii
 import json
 import time
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 
 RETRY_INTERVAL = 5  # time to wait on a failed MQTT interaction before retrying
+RETRY_COUNT = 10
 
 
 class DiscoverableDevice(MQTTClient):
@@ -67,6 +68,7 @@ class DiscoverableDevice(MQTTClient):
         self._interval = interval
         # used for last will/birth detection
         self._broker_alive = True
+        self._connection_failure_count = 0
         
         self._sensors = {}  # sensors by NAME
         self._switches = {}  # switches by ID
@@ -140,6 +142,10 @@ class DiscoverableDevice(MQTTClient):
     @property
     def broker_alive(self):
         return self._broker_alive
+        
+    @property
+    def conn_fail_count(self):
+        return self._connection_failure_count
 
     @property
     def state_topic(self):
@@ -326,8 +332,16 @@ class DiscoverableDevice(MQTTClient):
     def publish(self, *args, **kwargs):
         try:
             super().publish(*args, **kwargs)
+            self._connection_failure_count = 0
         except OSError:
-            print(f"failed to publish, retrying in {RETRY_INTERVAL}s")
+            print(f"failed to publish {self.conn_fail_count} times, retrying in {RETRY_INTERVAL}s")
+            self._connection_failure_count += 1
+            
+            if self.conn_fail_count > RETRY_COUNT:
+                print(f"connection has failed {RETRY_COUNT} times, assuming the broker is dead")
+                self._broker_alive = False
+                return
+                
             time.sleep(RETRY_INTERVAL)
             self.publish(*args, **kwargs)
 
@@ -351,3 +365,4 @@ class constant(Sensor):
         
     def read(self):
         return {self.displayname: self.value}
+
