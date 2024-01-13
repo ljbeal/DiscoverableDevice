@@ -381,4 +381,3 @@ class constant(Sensor):
         
     def read(self):
         return {self.displayname: self.value}
-
