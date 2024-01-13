@@ -21,7 +21,7 @@ class CPUTemp(Sensor):
     
     @property
     def value_template(self):
-        return "{{ " + f"value_json.{self.name} | float" + " }}"
+        return "{{ " + f"value_json.cputemp | round(2)" + " }}"
     
 
 if __name__ == "__main__":
