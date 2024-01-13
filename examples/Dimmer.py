@@ -16,6 +16,10 @@ class Dimmer(Switch):
         return self._pwm
     
     @property
+    def integration(self):
+        return "light"
+    
+    @property
     def duty(self):
         """Get PWM duty cycle
 
@@ -42,11 +46,13 @@ class Dimmer(Switch):
         print(f"led setup, initial duty {self.duty}")
 
     def callback(self, msg):
-        
-        if msg == "ON":
-            self.duty = 1
-        else:
-            self.duty = 0
+        try:
+            val = int(msg)
+
+            self.duty = val / 255
+            
+        except AttributeError:
+            print(f"could not parse message {msg}")
     
     def read(self):
         state = "ON" if self.duty > 0.0 else "OFF"
@@ -61,7 +67,7 @@ class Dimmer(Switch):
     @property
     def extra_discovery_fields(self):
         return {"brightness_value_template": "{{ " +  f"value_json.{self.name}_brightness | int" + " }}",
-                "brightness_state_topic": "homeassistant/sensor/e6614c311b2e5122/state",  # TODO: un-hardcode this
+                "brightness_state_topic": self.state_topic,
                 "brightness_command_topic": self.command_topic,
                 "brightness": True,
                 "effect": True,

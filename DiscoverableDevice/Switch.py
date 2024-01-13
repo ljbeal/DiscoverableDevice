@@ -19,7 +19,7 @@ class Switch(Sensor):
     
     @property
     def command_topic(self):
-        return f"{self.discovery_prefix}/{self.integration}/{self.parent_uid}/{self.name}/set"
+        return f"{self.base_topic}/{self.name}/set"
     
     def discovery_payload(self, *args, **kwargs):
         """

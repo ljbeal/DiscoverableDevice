@@ -149,10 +149,6 @@ class DiscoverableDevice(MQTTClient):
     @property
     def conn_fail_count(self):
         return self._connection_failure_count
-
-    @property
-    def state_topic(self):
-        return f"{self._discovery_prefix}/sensor/{self.uid}/state"    
     
     @property
     def device_payload(self):
@@ -176,7 +172,7 @@ class DiscoverableDevice(MQTTClient):
         """
         for sensor in self.sensors:
             print(f"discovering for sensor {sensor}")
-            sensor.discover(self, self.device_payload, self.state_topic)
+            sensor.discover(self, self.device_payload)
         
         self._discovered = True
                 
@@ -294,16 +290,21 @@ class DiscoverableDevice(MQTTClient):
         self._read_failure_count = 0
         
         # data to send, {topic: {payload}}
-        payload = {}
+        topics = {}
         for sensor in self.sensors:
             val = sensor.read()
+            topic = sensor.state_topic
 
-            payload.update(val)
+            try:
+                topics[topic].update(val)
+            except KeyError:
+                topics[topic] = val
             
         if not dry_run:
-            print(self.state_topic)
-            print(payload)
-            self.publish(self.state_topic, json.dumps(payload))
+            for topic, payload in topics.items():
+                print(topic)
+                print(payload)
+                self.publish(topic, json.dumps(payload))
         else:
             print(payload)
             

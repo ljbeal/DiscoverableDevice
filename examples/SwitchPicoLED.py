@@ -16,6 +16,10 @@ class SwitchLED(Switch):
         return self._led
     
     @property
+    def integration(self):
+        return "light"
+    
+    @property
     def state(self) -> bool:
         return self.led.value() == 1
     
