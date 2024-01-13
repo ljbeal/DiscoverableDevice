@@ -67,6 +67,7 @@ class DiscoverableDevice(MQTTClient):
         self._discovered = False
         
         self._interval = interval
+
         # used for last will/birth detection
         self._broker_alive = True
         self._connection_failure_count = 0
@@ -300,7 +301,8 @@ class DiscoverableDevice(MQTTClient):
             payload.update(val)
             
         if not dry_run:
-            print(payload)  
+            print(self.state_topic)
+            print(payload)
             self.publish(self.state_topic, json.dumps(payload))
         else:
             print(payload)
@@ -315,7 +317,7 @@ class DiscoverableDevice(MQTTClient):
     def interval(self):
         return self._interval
             
-    def run(self):
+    def run(self, once=False):
         print(f"running with interval {self.interval}")
         
         last_read = 0
@@ -339,6 +341,9 @@ class DiscoverableDevice(MQTTClient):
                 self.setup()
 
             time.sleep(0.05)
+
+            if once:
+                return
     
     def publish(self, *args, **kwargs):
         try:
