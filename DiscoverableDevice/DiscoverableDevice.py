@@ -267,6 +267,14 @@ class DiscoverableDevice(MQTTClient):
             topic = sensor.discovery_topic
             
             self.publish(topic, "")
+            
+    @property
+    def data(self):
+        return self._data
+            
+    @property
+    def interval(self):
+        return self._interval
         
     def read_sensors(self):
         """
@@ -283,26 +291,31 @@ class DiscoverableDevice(MQTTClient):
         
         # data to send, {topic: {payload}}
         topics = {}
+
+        force_push = False
+
         for sensor in self.sensors:
             val = sensor.read()
             topic = sensor.state_topic
             # update data entity
             self._data.update(val)
 
+            if isinstance(sensor, Trigger) and sensor.triggered:
+                force_push = True
+
             try:
                 topics[topic].update(val)
             except KeyError:
                 topics[topic] = val
 
-        return topics
-            
-    @property
-    def data(self):
-        return self._data
-            
-    @property
-    def interval(self):
-        return self._interval
+        return topics, force_push
+    
+    def push_data(self, topics):
+        for topic, payload in topics.items():
+            print(topic)
+            print(payload)
+            self.publish(topic, json.dumps(payload))
+        
             
     def run(self, once=False, dry_run=False):
         print(f"running with interval {self.interval}")
@@ -310,17 +323,17 @@ class DiscoverableDevice(MQTTClient):
         last_read = 0           
         
         while True:
-            if time.time() > last_read + self.interval:
-                topics = self.read_sensors()
+            topics, force = self.read_sensors()
+            if force or time.time() > last_read + self.interval:
                 
                 last_read = time.time()
             
                 if not dry_run:
-                    for topic, payload in topics.items():
-                        print(topic)
-                        print(payload)
-                        self.publish(topic, json.dumps(payload))
-            
+                    self.push_data(topics)
+
+                    if force:
+                        time.sleep(1)
+
             try:
                 self.check_msg()
             except MQTTException:
