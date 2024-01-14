@@ -30,18 +30,12 @@ class Switch(Sensor):
         return payload
     
     @property
-    def state(self):
-        return self._state
-    
-    @property
     def signature(self):
-        return {self.name: {"icon": "mdi:toggle-switch", "unit": None}}
+        raise NotImplementedError
     
     def read(self):
-        state = "ON" if self.state else "OFF"
-        
-        name = f"{self.name}_state"
-        return {name: state}
+        raise NotImplementedError
     
-    def callback(self):
+    def callback(self, msg):
+        """Implement function call to handle incoming `msg`"""
         raise NotImplementedError

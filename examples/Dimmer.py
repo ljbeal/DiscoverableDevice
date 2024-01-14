@@ -57,12 +57,16 @@ class Dimmer(Switch):
             if msg == "OFF":
                 self.duty = 0
     
+    @property
+    def signature(self):
+        return {self.name: {"icon": "mdi:toggle-switch", "unit": None}}
+    
     def read(self):        
         return {f"{self.name}_brightness": round(self.duty * 255)}
     
     @property
     def extra_discovery_fields(self):
-        return {"brightness_value_template": "{{ " +  f"value_json.{self.name}_brightness" + " }}",
+        return {"brightness_value_template": "{{ " +  f"value_json.{self.name}_brightness | int(0)" + " }}",
                 "brightness_state_topic": self.state_topic,
                 "brightness_command_topic": self.command_topic,
                 "brightness": True,
