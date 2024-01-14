@@ -15,7 +15,6 @@ __version__ = "0.1.5"
 
 RETRY_INTERVAL = 5  # time to wait on a failed MQTT interaction before retrying
 RETRY_COUNT = 10
-RESET_THRESHOLD = 10
 
 
 class DiscoverableDevice(MQTTClient):
@@ -269,7 +268,7 @@ class DiscoverableDevice(MQTTClient):
             
             self.publish(topic, "")
         
-    def read_sensors(self, dry_run=False):
+    def read_sensors(self):
         """
         Read all sensor data and send to broker.
         
@@ -277,17 +276,6 @@ class DiscoverableDevice(MQTTClient):
         
         This will "freeze" the class in place, blocking further additions.
         """
-        if not self.broker_alive:
-            print("Broker is offline ({self._read_failure_count} times), attemting setup instead of read")
-            
-            self._read_failure_count += 1
-            
-            if self._read_failure_count > RESET_THRESHOLD:
-                print("RESET_THRESHOLD crossed, resetting the board")
-                machine.reset()
-            
-            return
-
         if not self.discovered:
             self.discover()
             
@@ -298,21 +286,15 @@ class DiscoverableDevice(MQTTClient):
         for sensor in self.sensors:
             val = sensor.read()
             topic = sensor.state_topic
+            # update data entity
+            self._data.update(val)
 
             try:
                 topics[topic].update(val)
             except KeyError:
                 topics[topic] = val
-            
-        if not dry_run:
-            for topic, payload in topics.items():
-                print(topic)
-                print(payload)
-                self.publish(topic, json.dumps(payload))
-        else:
-            print(payload)
-            
-        self._data = payload
+
+        return topics
             
     @property
     def data(self):
@@ -322,19 +304,22 @@ class DiscoverableDevice(MQTTClient):
     def interval(self):
         return self._interval
             
-    def run(self, once=False):
+    def run(self, once=False, dry_run=False):
         print(f"running with interval {self.interval}")
         
-        last_read = 0
-        
-        def read():
-            self.read_sensors(dry_run=False)            
+        last_read = 0           
         
         while True:
             if time.time() > last_read + self.interval:
-                read()
+                topics = self.read_sensors()
                 
                 last_read = time.time()
+            
+                if not dry_run:
+                    for topic, payload in topics.items():
+                        print(topic)
+                        print(payload)
+                        self.publish(topic, json.dumps(payload))
             
             try:
                 self.check_msg()
