@@ -74,8 +74,7 @@ class DiscoverableDevice(MQTTClient):
         self._read_failure_count = 0
         
         self._sensors = {}  # sensors by NAME
-        self._switches = {}  # switches by ID
-        self._command_topics = {}  # switch TOPIC -> ID link
+        self._command_mapping = {}  # maps topic:switch
         
         ip = constant(name="Network", subname="IP", value=wlan.ifconfig()[0], icon="mdi:ip-network")
         uid = constant(name="Device", subname="UID", value=self.uid, icon="mdi:identifier")
@@ -133,12 +132,7 @@ class DiscoverableDevice(MQTTClient):
             print("Broker reports that it is going offline")
             self._broker_alive = False
 
-        payload = {}
-        if topic in self._command_topics:
-            idx = self._command_topics[topic]
-            switch = self._switches[idx]
-            
-            switch.callback(msg)
+        self._sensors[self._command_mapping[topic]].callback(msg)
 
         self.read_sensors()
 
@@ -200,14 +194,12 @@ class DiscoverableDevice(MQTTClient):
     @property
     def sensors(self):
         """Returns all sensors and switches"""
-        tmp = [sensor for sensor in self._sensors.values()]
-        tmp += [sensor for sensor in self._switches.values()]
-        return tmp
+        return [s for s in self._sensors.values()]
     
     @property
     def switches(self):
         """Returns just switches"""
-        return list(self._switches.values())
+        return [s for s in self.sensors if isinstance(s, Switch)]
     
     @property
     def discovery_prefix(self):
@@ -237,22 +229,15 @@ class DiscoverableDevice(MQTTClient):
     def add_switch(self, switch):
         """
         Just as with add_sensor, add a switch.
+
+        First adds the switch as a "sensor", then maps the command topic
+
+        TODO: Perhaps we need to expand to other topics e.g. `brightness_command_topic`
         """
-        if self.discovered:
-            raise RuntimeError("Cannot add switch after discovery")
-        
-        name = switch.name
-        if name in self.sensors:
-            raise ValueError(f"Switch {name} already exists! Delete it or choose a different name.")
-        
-        switch.discovery_prefix = self.discovery_prefix
-        switch.parent_uid = self.uid
-        
-        idx = len(self._switches)
-        self._switches[idx] = switch
+        self.add_sensor(switch)
         
         topic = switch.command_topic
-        self._command_topics[topic] = idx
+        self._command_mapping[topic] = switch.name
         print("subscribing to command topic", topic)
         self.subscribe(topic)
         
