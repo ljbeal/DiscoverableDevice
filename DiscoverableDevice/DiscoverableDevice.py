@@ -1,4 +1,6 @@
-from .Sensor import Sensor
+from DiscoverableDevice.Sensor import Sensor
+from DiscoverableDevice.Switch import Switch
+from DiscoverableDevice.Trigger import Trigger
 
 from umqtt.simple import MQTTClient, MQTTException
 
@@ -209,10 +211,9 @@ class DiscoverableDevice(MQTTClient):
                    sensor):
         """
         Add a sensor `sensor`
-        
+
         Args:
-            sensor:
-                sensor to store
+            sensor (Sensor): Sensor object
         """
         if self.discovered:
             raise RuntimeError("Cannot add sensor after discovery")
@@ -230,9 +231,14 @@ class DiscoverableDevice(MQTTClient):
         """
         Just as with add_sensor, add a switch.
 
-        First adds the switch as a "sensor", then maps the command topic
+        First adds the switch as a "sensor", then maps the command topic.
+        Switches are entities to be controlled _by HomeAssistant_. This description also extends to 
+        lights, despite their `integration` requiring to be "light"
 
         TODO: Perhaps we need to expand to other topics e.g. `brightness_command_topic`
+
+        Args:
+            switch (Switch): Switch object
         """
         self.add_sensor(switch)
         
@@ -240,6 +246,19 @@ class DiscoverableDevice(MQTTClient):
         self._command_mapping[topic] = switch.name
         print("subscribing to command topic", topic)
         self.subscribe(topic)
+
+    def add_trigger(self, trigger):
+        """
+        Just as with add_sensor, add a trigger.
+
+        Triggers are special entities in that a read MUST be sent when triggered.
+        This basically requires them to be constantly polled, and be able to overrule 
+        the base wait.
+
+        Args:
+            trigger (Trigger): Trigger obect
+        """
+        self.add_sensor(trigger)
         
     def delete(self):
         """
