@@ -68,9 +68,34 @@ class Sensor:
                 
             payload["state_topic"] = self.state_topic
 
+            signature_data = self.signature[subsensor]
+
+            if "unit" in signature_data:
+                payload["unit_of_measurement"] = signature_data["unit"]
+
             if hasattr(self, "value_template"):
-                payload["value_template"] = self.value_template
-                print(f"value template set to {self.value_template}")
+                try:
+                    vt = self.value_template
+                    print("value template set by direct property")
+                except TypeError:
+                    vt = self.value_template(subsensor)
+                    print("value template set by function call")
+
+            else:
+                vt = "{{ " + f"value_json.{subsensor}" 
+
+                if "value_mod" in signature_data:
+                    value_mod = signature_data["value_mod"]
+                    vt += f" | {value_mod}"
+                
+                vt += " }}"
+                print("value template set by signature extraction")
+
+            try:
+                payload["value_template"] = vt
+                print(f"value template set to {vt}")
+            except NameError:
+                raise RuntimeError(f"No Value Template found for {subsensor}")
 
             if hasattr(self, "command_topic"):
                 payload["command_topic"] = self.command_topic

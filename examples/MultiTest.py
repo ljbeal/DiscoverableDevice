@@ -1,5 +1,5 @@
 import random
-from Sensor import Sensor
+from DiscoverableDevice.Sensor import Sensor
 
 
 class BME280(Sensor):
@@ -10,11 +10,14 @@ class BME280(Sensor):
     @property
     def signature(self):        
         return {"temp": {"icon": "mdi:thermometer",
-                         "unit": "C"},
+                         "unit": "C",
+                         "value_mod": "round(2)"},
                 "humidity": {"icon": "mdi:water-percent",
-                             "unit": "%"},
+                             "unit": "%",
+                             "value_mod": "round(2)"},
                 "pressure": {"icon": "mdi:weight",
-                             "unit": "hPa"},
+                             "unit": "hPa",
+                             "value_mod": "round(2)"},
                 }
 
     def read(self):
