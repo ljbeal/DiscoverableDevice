@@ -7,7 +7,8 @@ class CPUTemp(Sensor):
     @property
     def signature(self):
         return {"cputemp": {"icon": "mdi:thermometer",
-                            "unit": "C"}
+                            "unit": "C",
+                            "value_mod": "round(2)"}
                 }
         
     def read(self):    
@@ -18,14 +19,6 @@ class CPUTemp(Sensor):
         temp_c = 27 - ( voltage - 0.706) / 0.001721
         
         return {"cputemp": temp_c}
-    
-    @property
-    def value_template(self):
-        return "{{ " + f"value_json.cputemp | round(2)" + " }}"
-    
-    @property
-    def extra_discovery_fields(self):
-        return {"unit_of_measurement": "C"}
     
 
 if __name__ == "__main__":
