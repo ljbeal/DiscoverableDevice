@@ -19,7 +19,11 @@ class Trigger(Sensor):
 
     @property
     def integration(self):
-        return "sensor"
+        return "binary_sensor"
+
+    @property
+    def state_topic(self):
+        return f"{self._discovery_prefix}/sensor/{self.parent_uid}/state"
     
     @property
     def triggered(self):
@@ -31,11 +35,11 @@ class Trigger(Sensor):
     
     def read(self):
         name = f"{self.name}_state"
-        return {name: self.triggered}
+        return {name: 'ON' if self.triggered else "OFF"}
     
     @property
     def value_template(self):
-        return "{{ " +  f"value_json.{self.name}_state" + " }}"
+        return f"{{{{ value_json.{self.name}_state }}}}"
 
 
 if __name__ == "__main__":
