@@ -20,7 +20,7 @@ RETRY_COUNT = 10
 class DiscoverableDevice(MQTTClient):
     """
     Base class for a device which communicates with HA via MQTT
-    
+
     Args:
         host:
             mqtt broker hostname, either address or ip
@@ -39,54 +39,64 @@ class DiscoverableDevice(MQTTClient):
         interval:
             report interval, defaults to 5s
     """
-    
-    def __init__(self,
-                 wlan,
-                 host: str,
-                 user: str,
-                 password: str,
-                 port: int = 1883,
-                 name: str = "PicoTest",
-                 discovery_prefix: str = "homeassistant",
-                 location: str | None = None,
-                 interval: int = 5):
-        
+
+    def __init__(
+        self,
+        wlan,
+        host: str,
+        user: str,
+        password: str,
+        port: int = 1883,
+        name: str = "PicoTest",
+        discovery_prefix: str = "homeassistant",
+        location: str | None = None,
+        interval: int = 5,
+    ):
         self._uid = ubinascii.hexlify(unique_id()).decode()
-        
-        super().__init__(client_id="",
-                         server=host,
-                         port=port,
-                         user=user,
-                         password=password,
-                         keepalive=60,
-                         ssl=False)
-        
+
+        super().__init__(
+            client_id="",
+            server=host,
+            port=port,
+            user=user,
+            password=password,
+            keepalive=60,
+            ssl=False,
+        )
+
         self._name = name
         self._location = location
-        
+
         self._discovery_prefix = discovery_prefix
         self._discovered = False
-        
+
         self._interval = interval
 
         # used for last will/birth detection
         self._broker_alive = True
         self._connection_failure_count = 0
         self._read_failure_count = 0
-        
+
         self._sensors = {}  # sensors by NAME
         self._command_mapping = {}  # maps topic:switch
-        
-        ip = constant(name="Network", subname="IP", value=wlan.ifconfig()[0], icon="mdi:ip-network")
-        uid = constant(name="Device", subname="UID", value=self.uid, icon="mdi:identifier")
+
+        ip = constant(
+            name="Network",
+            subname="IP",
+            value=wlan.ifconfig()[0],
+            icon="mdi:ip-network",
+        )
+        uid = constant(
+            name="Device", subname="UID", value=self.uid, icon="mdi:identifier"
+        )
 
         self.add_sensor(ip)
         self.add_sensor(uid)
-        
+
         self._data = {}
-        
+
         self.setup()
-        
+
     def setup(self):
         """
         Performs some initial setup, connecting and setting the callback
@@ -96,32 +106,32 @@ class DiscoverableDevice(MQTTClient):
         except OSError:
             print(f"failure to connect, waiting {RETRY_INTERVAL}s and retrying")
             time.sleep(RETRY_INTERVAL)
-            
+
             self.setup()
-        
+
         self.cb = self.callback
-        
+
         statustopic = "homeassistant/status"
         print(f"subscribing to status topic {statustopic}")
         self.subscribe(statustopic)
-        
+
         for sensor in self.sensors:
             if hasattr(sensor, "command_topic"):
                 self.subscribe(sensor.command_topic)
-            
+
     def callback(self, topic, msg):
         """
         Callback function that gets called when awaiting a message.
-        
+
         Switch toggles from HA MQTT are either b'ON' or b'OFF', on the
         topic that was set in that switch's command_topic
         """
         topic = topic.decode()
         msg = msg.decode()
-        
+
         print(f"received msg '{msg}'\non topic '{topic}'")
 
-        if msg == 'online':
+        if msg == "online":
             print("Broker reports that it is online")
             if not self.broker_alive:
                 print("Broker currently offline, rediscovering")
@@ -129,7 +139,7 @@ class DiscoverableDevice(MQTTClient):
 
             self._broker_alive = True
 
-        elif msg == 'offline':
+        elif msg == "offline":
             print("Broker reports that it is going offline")
             self._broker_alive = False
 
@@ -140,11 +150,11 @@ class DiscoverableDevice(MQTTClient):
     @property
     def broker_alive(self):
         return self._broker_alive
-        
+
     @property
     def conn_fail_count(self):
         return self._connection_failure_count
-    
+
     @property
     def device_payload(self):
         """Device payload for nicer looking interface in HA"""
@@ -155,12 +165,12 @@ class DiscoverableDevice(MQTTClient):
         payload["sw_version"] = __version__
         payload["model"] = self.name
         payload["manufacturer"] = "ljbeal"
-        
+
         if self.location is not None:
             payload["suggested_area"] = self.location
 
-        return payload 
-        
+        return payload
+
     def discover(self):
         """
         Iterate over all sensors and switches, sending their discovery payload to their discovery address
@@ -168,46 +178,45 @@ class DiscoverableDevice(MQTTClient):
         for sensor in self.sensors:
             print(f"discovering for sensor {sensor}")
             sensor.discover(self, self.device_payload)
-        
+
         self._discovered = True
-                
+
     @property
     def discovered(self):
         """Have we run the discovery process?"""
         return self._discovered
-        
+
     @property
     def name(self):
         return self._name
-    
+
     @property
     def location(self):
         return self._location
-    
+
     @location.setter
     def location(self, location):
         self._location = location
-        
+
     @property
     def uid(self):
         return self._uid
-        
+
     @property
     def sensors(self):
         """Returns all sensors and switches"""
         return [s for s in self._sensors.values()]
-    
+
     @property
     def switches(self):
         """Returns just switches"""
         return [s for s in self.sensors if isinstance(s, Switch)]
-    
+
     @property
     def discovery_prefix(self):
         return self._discovery_prefix
-        
-    def add_sensor(self,
-                   sensor):
+
+    def add_sensor(self, sensor):
         """
         Add a sensor `sensor`
 
@@ -216,22 +225,24 @@ class DiscoverableDevice(MQTTClient):
         """
         if self.discovered:
             raise RuntimeError("Cannot add sensor after discovery")
-        
+
         name = sensor.name
         if name in self.sensors:
-            raise ValueError(f"Sensor {name} already exists! Delete it or choose a different name.")
-        
+            raise ValueError(
+                f"Sensor {name} already exists! Delete it or choose a different name."
+            )
+
         sensor.discovery_prefix = self.discovery_prefix
         sensor.parent_uid = self.uid
 
         self._sensors[name] = sensor
-        
+
     def add_switch(self, switch):
         """
         Just as with add_sensor, add a switch.
 
         First adds the switch as a "sensor", then maps the command topic.
-        Switches are entities to be controlled _by HomeAssistant_. This description also extends to 
+        Switches are entities to be controlled _by HomeAssistant_. This description also extends to
         lights, despite their `integration` requiring to be "light"
 
         TODO: Perhaps we need to expand to other topics e.g. `brightness_command_topic`
@@ -240,7 +251,7 @@ class DiscoverableDevice(MQTTClient):
             switch (Switch): Switch object
         """
         self.add_sensor(switch)
-        
+
         topic = switch.command_topic
         self._command_mapping[topic] = switch.name
         print("subscribing to command topic", topic)
@@ -251,44 +262,44 @@ class DiscoverableDevice(MQTTClient):
         Just as with add_sensor, add a trigger.
 
         Triggers are special entities in that a read MUST be sent when triggered.
-        This basically requires them to be constantly polled, and be able to overrule 
+        This basically requires them to be constantly polled, and be able to overrule
         the base wait.
 
         Args:
             trigger (Trigger): Trigger obect
         """
         self.add_sensor(trigger)
-        
+
     def delete(self):
         """
         Deletes all sensors
         """
         for sensor in self.sensors:
             topic = sensor.discovery_topic
-            
+
             self.publish(topic, "")
-            
+
     @property
     def data(self):
         return self._data
-            
+
     @property
     def interval(self):
         return self._interval
-        
+
     def read_sensors(self):
         """
         Read all sensor data and send to broker.
-        
+
         Note that this will call `discover` if not already called.
-        
+
         This will "freeze" the class in place, blocking further additions.
         """
         if not self.discovered:
             self.discover()
-            
+
         self._read_failure_count = 0
-        
+
         # data to send, {topic: {payload}}
         topics = {}
 
@@ -296,6 +307,10 @@ class DiscoverableDevice(MQTTClient):
 
         for sensor in self.sensors:
             val = sensor.read()
+
+            if val is None:
+                continue
+
             topic = sensor.state_topic
             # update data entity
             self._data.update(val)
@@ -309,25 +324,23 @@ class DiscoverableDevice(MQTTClient):
                 topics[topic] = val
 
         return topics, force_push
-    
+
     def push_data(self, topics):
         for topic, payload in topics.items():
             print(topic)
             print(payload)
             self.publish(topic, json.dumps(payload))
-        
-            
+
     def run(self, once=False, dry_run=False):
         print(f"running with interval {self.interval}")
-        
-        last_read = 0           
-        
+
+        last_read = 0
+
         while True:
             topics, force = self.read_sensors()
             if force or time.time() > last_read + self.interval:
-                
                 last_read = time.time()
-            
+
                 if not dry_run:
                     self.push_data(topics)
 
@@ -347,53 +360,53 @@ class DiscoverableDevice(MQTTClient):
 
             if once:
                 return
-    
+
     def publish(self, *args, **kwargs):
         try:
             super().publish(*args, **kwargs)
             self._connection_failure_count = 0
         except OSError:
-            print(f"failed to publish {self.conn_fail_count} times, retrying in {RETRY_INTERVAL}s")
+            print(
+                f"failed to publish {self.conn_fail_count} times, retrying in {RETRY_INTERVAL}s"
+            )
             self._connection_failure_count += 1
-            
+
             if self.conn_fail_count > RETRY_COUNT:
-                print(f"connection has failed {RETRY_COUNT} times, assuming the broker is dead")
+                print(
+                    f"connection has failed {RETRY_COUNT} times, assuming the broker is dead"
+                )
                 self._broker_alive = False
                 return
-                
+
             time.sleep(RETRY_INTERVAL)
             self.publish(*args, **kwargs)
 
 
 class constant(Sensor):
     def __init__(self, name, value, subname=None, unit=None, icon=None):
-        
         self.unit = unit
         self.icon = icon
         self.value = value
-        
+
         self.displayname = subname or name
 
         super().__init__(name)
-    
+
     @property
     def signature(self):
-        return {self.displayname: {"icon": self.icon,
-                                   "unit": self.unit}
-                }
-        
+        return {self.displayname: {"icon": self.icon, "unit": self.unit}}
+
     @property
     def value_template(self):
         return "{{ " + f"value_json.{self.displayname}" + " }}"
-    
+
     @property
     def extra_discovery_fields(self):
         output = {}
         if self.unit is not None:
             output["unit"] = unit
-            
+
         return output
-        
+
     def read(self):
         return {self.displayname: self.value}
-
