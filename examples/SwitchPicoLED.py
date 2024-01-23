@@ -15,19 +15,12 @@ class SwitchLED(Switch):
         self.value_template = None
 
     @property
-    def signature(self):
-        return {}
-        
-    @property
     def led(self):
         return self._led
     
     @property
     def state(self) -> bool:
         return self.led.value() == 1
-    
-    def setup(self):
-        print(f"led setup, initial state {self.state}")
 
     def callback(self, msg):
         if msg == "ON":
