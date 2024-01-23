@@ -2,7 +2,13 @@ from DiscoverableDevice.Sensor import Sensor
 from DiscoverableDevice.Switch import Switch
 from DiscoverableDevice.Trigger import Trigger
 
-from umqtt.simple import MQTTClient, MQTTException
+try:
+    from umqtt.simple import MQTTClient, MQTTException
+except ImportError:
+    import mip
+    mip.install("umqtt.simple")
+    print("installed umqtt.simple")
+    from umqtt.simple import MQTTClient, MQTTException
 
 from machine import unique_id
 
