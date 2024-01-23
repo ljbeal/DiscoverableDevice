@@ -13,9 +13,7 @@ class Switch(Sensor):
         
         super().__init__(name)
         
-    @property
-    def integration(self):
-        return "switch"
+        self.integration = "switch"
     
     @property
     def command_topic(self):

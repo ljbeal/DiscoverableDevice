@@ -1,6 +1,7 @@
 import json
 
 class Sensor:
+
     def __init__(self, name):
 
         if " " in name:
@@ -8,9 +9,7 @@ class Sensor:
         
         self._name = name
         
-    @property
-    def integration(self):
-        return "sensor"
+        self.integration = "sensor"
     
     @property
     def name(self):
@@ -92,8 +91,9 @@ class Sensor:
                 print("value template set by signature extraction")
 
             try:
-                payload["value_template"] = vt
-                print(f"value template set to {vt}")
+                if vt is not None:
+                    payload["value_template"] = vt
+                    print(f"value template set to {vt}")
             except NameError:
                 raise RuntimeError(f"No Value Template found for {subsensor}")
 
