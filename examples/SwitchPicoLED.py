@@ -30,7 +30,7 @@ class SwitchLED(Switch):
     
     @property
     def signature(self):
-        return {self.name: {"icon": "mdi:toggle-switch"}}
+        return {self.name: {"icon": "mdi:lightbulb"}}
     
     def read(self):
         state = "ON" if self.state else "OFF"
