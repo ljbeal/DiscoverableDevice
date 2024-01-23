@@ -4,20 +4,23 @@ from machine import Pin
 
 
 class SwitchLED(Switch):
-    
-    def __init__(self, name):        
-        
+
+    def __init__(self, name):
+
         self._led = Pin("LED", Pin.OUT)
-        
+
         super().__init__(name)
+
+        self.integration = "light"
+        self.value_template = None
+
+    @property
+    def signature(self):
+        return {}
         
     @property
     def led(self):
         return self._led
-    
-    @property
-    def integration(self):
-        return "light"
     
     @property
     def state(self) -> bool:
@@ -34,17 +37,18 @@ class SwitchLED(Switch):
     
     @property
     def signature(self):
-        return {self.name: {"icon": "mdi:toggle-switch", "unit": None}}
+        return {self.name: {"icon": "mdi:toggle-switch"}}
     
     def read(self):
         state = "ON" if self.state else "OFF"
         
-        name = f"{self.name}_state"
-        return {name: state}
+        return {self.name: state}
     
     @property
-    def value_template(self):
-        return "{{ " +  f"value_json.{self.name}_state" + " }}"
+    def extra_discovery_fields(self):
+        return {"payload_on": "ON",
+                "payload_off": "OFF",
+                "state_value_template": "{{ value_json.BoardLED }}"}
 
 
 if __name__ == "__main__":
