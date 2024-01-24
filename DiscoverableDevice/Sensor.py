@@ -61,7 +61,11 @@ class Sensor:
             payload["unique_id"] = f"{self.parent_uid}_{self.name}_{subsensor}"
             payload["icon"] = icon
             payload["force_update"] = True
-            payload["name"] = f"{self.name}_{subsensor}"
+
+            if len(self.signature) == 1:
+                payload["name"] = subsensor
+            else:
+                payload["name"] = f"{self.name}_{subsensor}"
             
             payload["device"] = device_payload
                 
@@ -108,7 +112,10 @@ class Sensor:
                     payload[topic] = value
             # this `subsensor` param is what's giving us all the BoardLED_BoardLED crap, 
             # can it be refactored?
-            discovery_topic = self.discovery_topic(subsensor)
+            if len(self.signature) == 1:
+                discovery_topic = self.discovery_topic()
+            else:
+                discovery_topic = self.discovery_topic(subsensor)
             
             print(f"discovering on topic {discovery_topic}")
             print(f"sending payload: {json.dumps(payload)}")
