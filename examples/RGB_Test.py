@@ -173,10 +173,10 @@ class RGB(Switch):
     def callback(self, msg):
         if msg == "ON":
             for led in self.leds:
-                led.on()
+                return led.on()
         elif msg == "OFF":
             for led in self.leds:
-                led.off()
+                return led.off()
 
         try:
             val = int(msg)
@@ -184,7 +184,8 @@ class RGB(Switch):
             self.rgb = (val, val, val)
 
         except ValueError:
-            pass
+            r, g, b = [int(v) for v in msg.split(",")]
+            self.rgb = (r, g, b)
     
     @property
     def signature(self):
@@ -193,7 +194,7 @@ class RGB(Switch):
     def read(self):        
         state = "ON" if sum(self.rgb) > 0 else "OFF"
         return {f"{self.name}_State": state,
-                f"{self.name}_RGB": f"{self.rgb}",
+                f"{self.name}_RGB": f"{self.r},{self.g},{self.b}",
                 f"{self.name}_Brightness": 255}
     
     @property
@@ -201,9 +202,11 @@ class RGB(Switch):
         return {
                 "state_value_template": f"{{{{ value_json.{self.name}_State }}}}",
                 "rgb_value_template": f"{{{{ value_json.{self.name}_RGB }}}}",
-                "rgb_state_topic": f"{self._discovery_prefix}/light/{self.parent_uid}/state",
-                "brightness_command_topic": self.command_topic,
                 "brightness_value_template": f"{{{{ value_json.{self.name}_Brightness }}}}",
+                "rgb_state_topic": self.state_topic,
+                "brightness_state_topic": self.state_topic,
+                "brightness_command_topic": self.command_topic,
+                "rgb_command_topic": self.command_topic,
                 "payload_on": "ON",
                 "payload_off": "OFF",
                 }
