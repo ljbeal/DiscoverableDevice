@@ -177,19 +177,35 @@ class RGB(Switch):
         elif msg == "OFF":
             for led in self.leds:
                 led.off()
+
+        try:
+            val = int(msg)
+            # TODO: Implement this as a true brightness
+            self.rgb = (val, val, val)
+
+        except ValueError:
+            pass
     
     @property
     def signature(self):
-        return {self.name: {"icon": "mdi:light"}}
+        return {self.name: {"icon": "mdi:lightbulb"}}
     
     def read(self):        
-        return {self.name: f"{self.rgb}"}
+        state = "ON" if sum(self.rgb) > 0 else "OFF"
+        return {f"{self.name}_State": state,
+                f"{self.name}_RGB": f"{self.rgb}",
+                f"{self.name}_Brightness": 255}
     
     @property
     def extra_discovery_fields(self):
         return {
-                "rgb_value_template": f"{{{{ value_json.{self.name} }}}}",
-                "rgb_state_topic": f"{self._discovery_prefix}/rgb/{self.parent_uid}/state",
+                "state_value_template": f"{{{{ value_json.{self.name}_State }}}}",
+                "rgb_value_template": f"{{{{ value_json.{self.name}_RGB }}}}",
+                "rgb_state_topic": f"{self._discovery_prefix}/light/{self.parent_uid}/state",
+                "brightness_command_topic": self.command_topic,
+                "brightness_value_template": f"{{{{ value_json.{self.name}_Brightness }}}}",
+                "payload_on": "ON",
+                "payload_off": "OFF",
                 }
 
 
