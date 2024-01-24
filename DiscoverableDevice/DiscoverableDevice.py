@@ -408,7 +408,7 @@ class constant(Sensor):
 
     @property
     def extra_discovery_fields(self):
-        output = {}
+        output = {"entity_category": "diagnostic"}
         if self.unit is not None:
             output["unit"] = unit
 
