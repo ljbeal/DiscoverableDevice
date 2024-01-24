@@ -16,7 +16,7 @@ import ubinascii
 import json
 import time
 
-__version__ = "0.1.5"
+__version__ = "0.0.1a"
 
 
 RETRY_INTERVAL = 5  # time to wait on a failed MQTT interaction before retrying
