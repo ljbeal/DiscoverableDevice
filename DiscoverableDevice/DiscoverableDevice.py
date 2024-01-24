@@ -87,13 +87,12 @@ class DiscoverableDevice(MQTTClient):
         self._command_mapping = {}  # maps topic:switch
 
         ip = constant(
-            name="Network",
-            subname="IP",
+            name="IP",
             value=wlan.ifconfig()[0],
             icon="mdi:ip-network",
         )
         uid = constant(
-            name="Device", subname="UID", value=self.uid, icon="mdi:identifier"
+            name="UID", value=self.uid, icon="mdi:identifier"
         )
 
         self.add_sensor(ip)
@@ -316,7 +315,7 @@ class DiscoverableDevice(MQTTClient):
 
             if val is None:
                 continue
-
+            # need access for rgb_state_topic, etc.
             topic = sensor.state_topic
             # update data entity
             self._data.update(val)
@@ -389,22 +388,20 @@ class DiscoverableDevice(MQTTClient):
 
 
 class constant(Sensor):
-    def __init__(self, name, value, subname=None, unit=None, icon=None):
+    def __init__(self, name, value, unit=None, icon=None):
         self.unit = unit
         self.icon = icon
         self.value = value
-
-        self.displayname = subname or name
 
         super().__init__(name)
 
     @property
     def signature(self):
-        return {self.displayname: {"icon": self.icon, "unit": self.unit}}
+        return {self.name: {"icon": self.icon, "unit": self.unit}}
 
     @property
     def value_template(self):
-        return "{{ " + f"value_json.{self.displayname}" + " }}"
+        return "{{ " + f"value_json.{self.name}" + " }}"
 
     @property
     def extra_discovery_fields(self):
@@ -415,4 +412,4 @@ class constant(Sensor):
         return output
 
     def read(self):
-        return {self.displayname: self.value}
+        return {self.name: self.value}
