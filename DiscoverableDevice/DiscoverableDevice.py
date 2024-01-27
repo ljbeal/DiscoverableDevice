@@ -152,7 +152,7 @@ class DiscoverableDevice(MQTTClient):
         for name in sensornames:
             self._sensors[name].callback(msg)
 
-        self.read_sensors()
+        self.push_data(self.read_sensors(sensornames))
 
     @property
     def broker_alive(self):
@@ -301,7 +301,7 @@ class DiscoverableDevice(MQTTClient):
     def interval(self):
         return self._interval
 
-    def read_sensors(self):
+    def read_sensors(self, selection: list | None = None):
         """
         Read all sensor data and send to broker.
 
@@ -318,7 +318,13 @@ class DiscoverableDevice(MQTTClient):
         topics = {}
 
         for sensor in self.sensors:
-            val = sensor.read()
+            if selection is not None and sensor.name not in selection:
+                continue
+            
+            try:
+                val = sensor.read()
+            except AttributeError:
+                continue
 
             if val is None:
                 continue
