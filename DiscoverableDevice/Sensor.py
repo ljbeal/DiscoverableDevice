@@ -45,30 +45,25 @@ class Sensor:
         # need a separate discovery for each value a sensor can return
         for subsensor in self.signature:
             print(f"discovering for subsensor {subsensor}")
-            sig = self.signature[subsensor]
-            
-            icon = sig.get("icon", None)
-            unit = sig.get("unit", None)
-            
-            payload = {}
-            # not the right way to do it, but something about pylance hates a direct setup
-            payload["unique_id"] = f"{self.parent_uid}_{self.name}_{subsensor}"
-            payload["icon"] = icon
-            payload["force_update"] = True
+            signature_data = self.signature[subsensor]
+                        
+            payload = {"unique_id": f"{self.parent_uid}_{self.name}_{subsensor}",
+                       "force_update": True,
+                       "device": device_payload,
+                       "state_topic": self.state_topic}
 
             if len(self.signature) == 1:
                 payload["name"] = subsensor
             else:
                 payload["name"] = f"{self.name}_{subsensor}"
-            
-            payload["device"] = device_payload
-                
-            payload["state_topic"] = self.state_topic
 
-            signature_data = self.signature[subsensor]
+            unit = signature_data.get("unit", None)
+            if unit is not None:
+                payload["unit_of_measurement"] = unit
 
-            if "unit" in signature_data:
-                payload["unit_of_measurement"] = signature_data["unit"]
+            icon = signature_data.get("icon", None)
+            if icon is not None:
+                payload["icon"] = icon
 
             if hasattr(self, "value_template"):
                 try:
