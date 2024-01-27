@@ -123,10 +123,6 @@ class DiscoverableDevice(MQTTClient):
         print(f"subscribing to status topic {statustopic}")
         self.subscribe(statustopic)
 
-        for sensor in self.sensors:
-            if hasattr(sensor, "command_topic"):
-                self.subscribe(sensor.command_topic)
-
     def callback(self, topic, msg):
         """
         Callback function that gets called when awaiting a message.
