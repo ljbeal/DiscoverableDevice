@@ -5,6 +5,7 @@ from DiscoverableDevice.Trigger import Trigger
 from DiscoverableDevice.utils.timestamp import timestamp
 from DiscoverableDevice.utils.pins import get_gpio
 from DiscoverableDevice.utils.Profile import Profile
+from DiscoverableDevice.utils.Status import blink
 
 try:
     from umqtt.simple import MQTTClient, MQTTException
@@ -118,7 +119,7 @@ class DiscoverableDevice(MQTTClient):
             self.connect()
         except OSError:
             print(f"failure to connect, waiting {RETRY_INTERVAL}s and retrying.")
-            time.sleep(RETRY_INTERVAL)
+            blink(RETRY_INTERVAL)
 
             self.initial_setup()        
         print("Success!")
@@ -390,7 +391,7 @@ class DiscoverableDevice(MQTTClient):
                 self._broker_alive = False
                 return
 
-            time.sleep(RETRY_INTERVAL)
+            blink(RETRY_INTERVAL)
             self.publish(*args, **kwargs)
 
 
