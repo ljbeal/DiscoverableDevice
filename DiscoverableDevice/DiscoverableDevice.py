@@ -338,7 +338,7 @@ class DiscoverableDevice(MQTTClient):
         last_read = 0
 
         while True:
-            if time.time() > last_read + self.interval:
+            if time.time() >= last_read + self.interval:
                 topics = self.read_sensors()
                 last_read = time.time()
 
