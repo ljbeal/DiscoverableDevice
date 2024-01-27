@@ -413,3 +413,8 @@ class constant(Sensor):
 
     def read(self):
         return {self.name: self.value}
+
+
+if __name__ == "__main__":
+    from main import main
+    main()
