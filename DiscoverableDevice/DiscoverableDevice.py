@@ -3,6 +3,7 @@ from DiscoverableDevice.Switch import Switch
 from DiscoverableDevice.Trigger import Trigger
 
 from DiscoverableDevice.utils.timeutils import timestamp
+from DiscoverableDevice.utils.profiling import Profile
 
 try:
     from umqtt.simple import MQTTClient, MQTTException
@@ -240,7 +241,7 @@ class DiscoverableDevice(MQTTClient):
             )
 
         sensor.discovery_prefix = self.discovery_prefix
-        sensor.parent_uid = self.uid
+        sensor._parent_uid = self.uid
 
         self._sensors[name] = sensor
 

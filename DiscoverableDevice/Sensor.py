@@ -19,10 +19,6 @@ class Sensor:
     def parent_uid(self):
         return self._parent_uid
     
-    @parent_uid.setter
-    def parent_uid(self, uid):
-        self._parent_uid = uid
-    
     @property
     def discovery_prefix(self):
         return self._discovery_prefix
