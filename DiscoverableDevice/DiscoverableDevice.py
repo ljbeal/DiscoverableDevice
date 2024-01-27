@@ -153,6 +153,10 @@ class DiscoverableDevice(MQTTClient):
         elif msg == "offline":
             print("Broker reports that it is going offline")
             self._broker_alive = False
+        
+        if topic not in self._command_mapping:
+            print(f"topic {topic} is not assigned to a sensor, skipping.")
+            return
         # list of sensors subscribed to this topic
         sensornames = self._command_mapping[topic]
 
