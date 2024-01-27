@@ -309,7 +309,7 @@ class DiscoverableDevice(MQTTClient):
                 continue
 
             try:
-                val = sensor.read()
+                val = sensor._read(force=True)
             except NotImplementedError:
                 continue
 

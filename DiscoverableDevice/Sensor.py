@@ -1,4 +1,5 @@
 import json
+from time import ticks_ms, ticks_diff
 
 class Sensor:
 
@@ -8,6 +9,8 @@ class Sensor:
             raise ValueError("names cannot contain spaces")
         
         self._name = name
+        self._data = {}
+        self._last_read = 0
         
         self.integration = "sensor"
     
@@ -115,6 +118,19 @@ class Sensor:
         
     def read(self) -> dict:
         raise NotImplementedError
+    
+    def _read(self, interval: int = 5, force: bool = False):
+        if not force and not ticks_diff(ticks_ms(), self._last_read) > interval * 1000:
+            return
+
+        self._last_read = ticks_ms()
+        self._data = self.read()
+
+        return self.data
+
+    @property
+    def data(self):
+        return self._data
     
 
 def ensure_list(input) -> list:
