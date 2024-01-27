@@ -17,15 +17,13 @@ class Sensor:
 
     @property
     def parent_uid(self):
+        """Parent UID, set by parent on assignment"""
         return self._parent_uid
     
     @property
     def discovery_prefix(self):
+        """Parent discovery topic, set by parent on assignment"""
         return self._discovery_prefix
-    
-    @discovery_prefix.setter
-    def discovery_prefix(self, prefix):
-        self._discovery_prefix = prefix
 
     @property
     def base_topic(self):

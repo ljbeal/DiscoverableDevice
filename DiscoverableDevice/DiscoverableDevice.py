@@ -240,7 +240,7 @@ class DiscoverableDevice(MQTTClient):
                 f"Sensor {name} already exists! Delete it or choose a different name."
             )
 
-        sensor.discovery_prefix = self.discovery_prefix
+        sensor._discovery_prefix = self.discovery_prefix
         sensor._parent_uid = self.uid
 
         self._sensors[name] = sensor
