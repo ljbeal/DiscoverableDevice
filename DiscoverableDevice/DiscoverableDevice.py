@@ -87,7 +87,7 @@ class DiscoverableDevice(MQTTClient):
         self._read_failure_count = 0
 
         self._sensors = {}  # sensors by NAME
-        self._command_mapping = {}  # maps topic:switch
+        self._command_mapping = {}  # maps topic:[switch]
 
         ip = constant(
             name="IP",
@@ -150,8 +150,11 @@ class DiscoverableDevice(MQTTClient):
         elif msg == "offline":
             print("Broker reports that it is going offline")
             self._broker_alive = False
+        # list of sensors subscribed to this topic
+        sensornames = self._command_mapping[topic]
 
-        self._sensors[self._command_mapping[topic]].callback(msg)
+        for name in sensornames:
+            self._sensors[name].callback(msg)
 
         self.read_sensors()
 
@@ -260,10 +263,17 @@ class DiscoverableDevice(MQTTClient):
         """
         self.add_sensor(switch)
 
-        topic = switch.command_topic
-        self._command_mapping[topic] = switch.name
-        print("subscribing to command topic", topic)
-        self.subscribe(topic)
+        command_topics = [switch.command_topic]
+
+        for topic in command_topics:            
+            try:
+                if switch.name not in self._command_mapping[topic]:
+                    self._command_mapping[topic].append(switch.name)
+            except KeyError:
+                self._command_mapping[topic] = []
+
+            print("subscribing to command topic", topic)
+            self.subscribe(topic)
 
     def add_trigger(self, trigger):
         """
