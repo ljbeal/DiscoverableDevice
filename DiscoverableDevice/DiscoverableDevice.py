@@ -352,6 +352,15 @@ class DiscoverableDevice(MQTTClient):
                     if force:
                         time.sleep(1)
 
+            try:
+                self.check_msg()
+            except MQTTException:
+                print("MQTTException, reconnecting")
+                self.setup()
+            except OSError:
+                print("OSError, reconnecting")
+                self.setup()
+
             time.sleep(0.05)
 
             if once:
@@ -362,6 +371,18 @@ class DiscoverableDevice(MQTTClient):
             super().publish(*args, **kwargs)
             self._connection_failure_count = 0
         except OSError:
+            print(
+                f"failed to publish {self.conn_fail_count} times, retrying in {RETRY_INTERVAL}s"
+            )
+            self._connection_failure_count += 1
+
+            if self.conn_fail_count > RETRY_COUNT:
+                print(
+                    f"connection has failed {RETRY_COUNT} times, assuming the broker is dead"
+                )
+                self._broker_alive = False
+                return
+
             time.sleep(RETRY_INTERVAL)
             self.publish(*args, **kwargs)
 
