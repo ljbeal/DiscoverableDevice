@@ -114,12 +114,14 @@ class DiscoverableDevice(MQTTClient):
         Performs some initial setup, connecting and setting the callback
         """
         try:
+            print("Attempting to connect to MQTT Broker...", end=" ")
             self.connect()
         except OSError:
-            print(f"failure to connect, waiting {RETRY_INTERVAL}s and retrying")
+            print(f"failure to connect, waiting {RETRY_INTERVAL}s and retrying.")
             time.sleep(RETRY_INTERVAL)
 
-            self.setup()
+            self.setup()        
+        print("Success!")
 
         self.cb = self.callback
 
