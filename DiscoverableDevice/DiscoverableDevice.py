@@ -98,8 +98,8 @@ class DiscoverableDevice(MQTTClient):
             name="UID", value=self.uid, icon="mdi:identifier"
         )
 
-        self.add_sensor(ip)
-        self.add_sensor(uid)
+        self.add_entity(ip)
+        self.add_entity(uid)
 
         self._data = {}
 
@@ -222,67 +222,36 @@ class DiscoverableDevice(MQTTClient):
     @property
     def discovery_prefix(self):
         return self._discovery_prefix
-
-    def add_sensor(self, sensor):
-        """
-        Add a sensor `sensor`
-
-        Args:
-            sensor (Sensor): Sensor object
-        """
+    
+    def add_entity(self, entity):
         if self.discovered:
-            raise RuntimeError("Cannot add sensor after discovery")
+            raise RuntimeError("Cannot add entity after discovery")
 
-        name = sensor.name
+        name = entity.name
         if name in self.sensors:
             raise ValueError(
                 f"Sensor {name} already exists! Delete it or choose a different name."
             )
 
-        sensor._discovery_prefix = self.discovery_prefix
-        sensor._parent_uid = self.uid
+        entity._discovery_prefix = self.discovery_prefix
+        entity._parent_uid = self.uid
 
-        self._sensors[name] = sensor
+        self._sensors[name] = entity
 
-    def add_switch(self, switch):
-        """
-        Just as with add_sensor, add a switch.
+        if not hasattr(entity, "command_topic"):
+            return
 
-        First adds the switch as a "sensor", then maps the command topic.
-        Switches are entities to be controlled _by HomeAssistant_. This description also extends to
-        lights, despite their `integration` requiring to be "light"
-
-        TODO: Perhaps we need to expand to other topics e.g. `brightness_command_topic`
-
-        Args:
-            switch (Switch): Switch object
-        """
-        self.add_sensor(switch)
-
-        command_topics = [switch.command_topic]
+        command_topics = [entity.command_topic]
 
         for topic in command_topics:            
             try:
-                if switch.name not in self._command_mapping[topic]:
-                    self._command_mapping[topic].append(switch.name)
+                if entity.name not in self._command_mapping[topic]:
+                    self._command_mapping[topic].append(entity.name)
             except KeyError:
-                self._command_mapping[topic] = [switch.name]
+                self._command_mapping[topic] = [entity.name]
 
             print("subscribing to command topic", topic)
             self.subscribe(topic)
-
-    def add_trigger(self, trigger):
-        """
-        Just as with add_sensor, add a trigger.
-
-        Triggers are special entities in that a read MUST be sent when triggered.
-        This basically requires them to be constantly polled, and be able to overrule
-        the base wait.
-
-        Args:
-            trigger (Trigger): Trigger obect
-        """
-        self.add_sensor(trigger)
 
     def delete(self):
         """
@@ -320,7 +289,7 @@ class DiscoverableDevice(MQTTClient):
         for sensor in self.sensors:
             if selection is not None and sensor.name not in selection:
                 continue
-            
+
             try:
                 val = sensor.read()
             except AttributeError:
