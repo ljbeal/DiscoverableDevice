@@ -266,7 +266,7 @@ class DiscoverableDevice(MQTTClient):
                 if switch.name not in self._command_mapping[topic]:
                     self._command_mapping[topic].append(switch.name)
             except KeyError:
-                self._command_mapping[topic] = []
+                self._command_mapping[topic] = [switch.name]
 
             print("subscribing to command topic", topic)
             self.subscribe(topic)
