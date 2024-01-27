@@ -2,8 +2,8 @@ from DiscoverableDevice.Sensor import Sensor
 from DiscoverableDevice.Switch import Switch
 from DiscoverableDevice.Trigger import Trigger
 
-from DiscoverableDevice.utils.timeutils import timestamp
-from DiscoverableDevice.utils.profiling import Profile
+from DiscoverableDevice.utils.timestamp import timestamp
+from DiscoverableDevice.utils.Profile import Profile
 
 try:
     from umqtt.simple import MQTTClient, MQTTException
@@ -317,8 +317,6 @@ class DiscoverableDevice(MQTTClient):
         # data to send, {topic: {payload}}
         topics = {}
 
-        force_push = False
-
         for sensor in self.sensors:
             val = sensor.read()
 
@@ -329,15 +327,12 @@ class DiscoverableDevice(MQTTClient):
             # update data entity
             self._data.update(val)
 
-            if isinstance(sensor, Trigger) and sensor.triggered:
-                force_push = True
-
             try:
                 topics[topic].update(val)
             except KeyError:
                 topics[topic] = val
 
-        return topics, force_push
+        return topics
 
     def push_data(self, topics):
         for topic, payload in topics.items():
@@ -346,19 +341,24 @@ class DiscoverableDevice(MQTTClient):
 
     def run(self, once=False, dry_run=False):
         print(f"running with interval {self.interval}")
-
         last_read = 0
 
         while True:
-            topics, force = self.read_sensors()
-            if force or time.time() > last_read + self.interval:
+            if time.time() >= last_read + self.interval:
+                topics = self.read_sensors()
                 last_read = time.time()
 
                 if not dry_run:
                     self.push_data(topics)
 
-                    if force:
-                        time.sleep(1)
+            try:
+                self.check_msg()
+            except MQTTException:
+                print("MQTTException, reconnecting")
+                self.setup()
+            except OSError:
+                print("OSError, reconnecting")
+                self.setup()
 
             time.sleep(0.05)
 
@@ -370,6 +370,18 @@ class DiscoverableDevice(MQTTClient):
             super().publish(*args, **kwargs)
             self._connection_failure_count = 0
         except OSError:
+            print(
+                f"failed to publish {self.conn_fail_count} times, retrying in {RETRY_INTERVAL}s"
+            )
+            self._connection_failure_count += 1
+
+            if self.conn_fail_count > RETRY_COUNT:
+                print(
+                    f"connection has failed {RETRY_COUNT} times, assuming the broker is dead"
+                )
+                self._broker_alive = False
+                return
+
             time.sleep(RETRY_INTERVAL)
             self.publish(*args, **kwargs)
 
@@ -400,3 +412,8 @@ class constant(Sensor):
 
     def read(self):
         return {self.name: self.value}
+
+
+if __name__ == "__main__":
+    from main import main
+    main()
