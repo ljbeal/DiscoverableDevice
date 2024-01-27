@@ -3,6 +3,7 @@ from DiscoverableDevice.Switch import Switch
 from DiscoverableDevice.Trigger import Trigger
 
 from DiscoverableDevice.utils.timestamp import timestamp
+from DiscoverableDevice.utils.pins import get_gpio
 from DiscoverableDevice.utils.Profile import Profile
 
 try:
@@ -88,6 +89,7 @@ class DiscoverableDevice(MQTTClient):
 
         self._sensors = {}  # sensors by NAME
         self._command_mapping = {}  # maps topic:[switch]
+        self._irq_mapping = {}  # maps pin:switch
 
         ip = constant(
             name="IP",
@@ -153,6 +155,16 @@ class DiscoverableDevice(MQTTClient):
             self._sensors[name].callback(msg)
 
         self.push_data(self.read_sensors(sensornames))
+
+    def irq_callback(self, pin):
+        pin = get_gpio(pin)
+        print(f"Toplevel irq_callback for pin {pin}")
+        name = self._irq_mapping[pin]
+
+        # TODO: fix this, it's horrible
+        self.push_data(self.read_sensors())
+        self.push_data(self.read_sensors())
+
 
     @property
     def broker_alive(self):
@@ -238,6 +250,12 @@ class DiscoverableDevice(MQTTClient):
 
         self._sensors[name] = entity
 
+        if isinstance(entity, Trigger):
+            # set irq callback
+            print(f"setting irq callback for {entity}")
+            entity.set_callback(self.irq_callback)
+            self._irq_mapping[entity.gpio_pin] = entity.name
+
         if not hasattr(entity, "command_topic"):
             return
 
@@ -292,7 +310,7 @@ class DiscoverableDevice(MQTTClient):
 
             try:
                 val = sensor.read()
-            except AttributeError:
+            except NotImplementedError:
                 continue
 
             if val is None:
