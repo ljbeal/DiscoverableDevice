@@ -104,8 +104,7 @@ class Sensor:
                     print(f"adding extra data at {topic}: {value}")
 
                     payload[topic] = value
-            # this `subsensor` param is what's giving us all the BoardLED_BoardLED crap, 
-            # can it be refactored?
+
             if len(self.signature) == 1:
                 discovery_topic = self.discovery_topic()
             else:
