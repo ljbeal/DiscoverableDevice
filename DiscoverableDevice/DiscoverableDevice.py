@@ -2,6 +2,9 @@ from DiscoverableDevice.Sensor import Sensor
 from DiscoverableDevice.Switch import Switch
 from DiscoverableDevice.Trigger import Trigger
 
+from DiscoverableDevice.utils.timestamp import timestamp
+from DiscoverableDevice.utils.Profile import Profile
+
 try:
     from umqtt.simple import MQTTClient, MQTTException
 except ImportError:
@@ -332,8 +335,7 @@ class DiscoverableDevice(MQTTClient):
 
     def push_data(self, topics):
         for topic, payload in topics.items():
-            print(topic)
-            print(payload)
+            print(timestamp(), payload)
             self.publish(topic, json.dumps(payload))
 
     def run(self, once=False, dry_run=False):
