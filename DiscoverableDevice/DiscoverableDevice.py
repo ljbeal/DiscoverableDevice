@@ -107,9 +107,9 @@ class DiscoverableDevice(MQTTClient):
 
         self._data = {}
 
-        self.setup()
+        self.initial_setup()
 
-    def setup(self):
+    def initial_setup(self):
         """
         Performs some initial setup, connecting and setting the callback
         """
@@ -120,7 +120,7 @@ class DiscoverableDevice(MQTTClient):
             print(f"failure to connect, waiting {RETRY_INTERVAL}s and retrying.")
             time.sleep(RETRY_INTERVAL)
 
-            self.setup()        
+            self.initial_setup()        
         print("Success!")
 
         self.cb = self.callback
@@ -144,7 +144,8 @@ class DiscoverableDevice(MQTTClient):
         if msg == "online":
             print("Broker reports that it is online")
             if not self.broker_alive:
-                print("Broker currently offline, rediscovering")
+                print("Broker currently offline, setting up.")
+                self.initial_setup()
                 self.discover()
 
             self._broker_alive = True
@@ -204,6 +205,10 @@ class DiscoverableDevice(MQTTClient):
         for sensor in self.sensors:
             print(f"discovering for sensor {sensor}")
             sensor.discover(self, self.device_payload)
+
+        for topic in self._command_mapping:
+            print("subscribing to command topic", topic)
+            self.subscribe(topic)
 
         self._discovered = True
 
@@ -275,9 +280,6 @@ class DiscoverableDevice(MQTTClient):
             except KeyError:
                 self._command_mapping[topic] = [entity.name]
 
-            print("subscribing to command topic", topic)
-            self.subscribe(topic)
-
     def delete(self):
         """
         Deletes all sensors
@@ -344,7 +346,7 @@ class DiscoverableDevice(MQTTClient):
         last_read = 0
 
         while True:
-            if time.time() >= last_read + self.interval:
+            if self.broker_alive and time.time() >= last_read + self.interval:
                 topics = self.read_sensors()
                 last_read = time.time()
 
@@ -355,10 +357,12 @@ class DiscoverableDevice(MQTTClient):
                 self.check_msg()
             except MQTTException:
                 print("MQTTException, reconnecting")
-                self.setup()
+                self.initial_setup()
+                self.discover()
             except OSError:
                 print("OSError, reconnecting")
-                self.setup()
+                self.initial_setup()
+                self.discover()
 
             time.sleep(0.05)
 
