@@ -74,6 +74,8 @@ class DiscoverableDevice(MQTTClient):
             ssl=False,
         )
 
+        self._wlan = wlan
+
         self._name = name
         self._location = location
 
@@ -165,6 +167,9 @@ class DiscoverableDevice(MQTTClient):
         self.push_data(self.read_sensors())
         self.push_data(self.read_sensors())
 
+    @property
+    def wlan(self):
+        return self._wlan
 
     @property
     def broker_alive(self):
