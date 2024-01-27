@@ -19,14 +19,6 @@ class Switch(Sensor):
     def command_topic(self):
         return f"{self.base_topic}/{self.name}/set"
     
-    def discovery_payload(self, *args, **kwargs):
-        """
-        Generates a dict to send for discovery
-        """
-        payload = super().discovery_payload(*args, **kwargs)
-        
-        return payload
-    
     @property
     def signature(self):
         raise NotImplementedError
