@@ -47,7 +47,7 @@ class Trigger(Sensor):
 
     @property
     def state_topic(self):
-        return f"{self._discovery_prefix}/sensor/{self.parent_uid}/state"
+        return f"{self._discovery_prefix}/{self.integration}/{self.parent_uid}/{self.name}/state"
 
     @property
     def signature(self):
