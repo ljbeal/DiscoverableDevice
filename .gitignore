@@ -7,3 +7,5 @@ DiscoverableDevice.code-workspace
 main.py
 DiscoveryStorage/*
 *.rar
+sensors/*
+test.py
