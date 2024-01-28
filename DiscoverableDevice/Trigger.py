@@ -22,7 +22,7 @@ class Trigger(Sensor):
 
         self._gpio_pin = pin
         self._pin = Pin(pin, Pin.IN, Pin.PULL_UP)
-        self._pin.irq(trigger=Pin.IRQ_FALLING, handler=self.irq_falling)
+        self._pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.irq_falling)
 
     @property
     def pin(self):
@@ -58,7 +58,7 @@ class Trigger(Sensor):
         return f"{{{{ value_json.{self.name}_state }}}}"
     
     def read(self):
-        state = "ON" if self._queued else "OFF"
+        state = "ON" if self.pin.value() == 0 else "OFF"
         self._queued = False
 
         return {f"{self.name}_state": state}

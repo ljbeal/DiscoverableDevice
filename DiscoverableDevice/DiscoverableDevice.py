@@ -171,8 +171,6 @@ class DiscoverableDevice(MQTTClient):
         print(f"Toplevel irq_callback for pin {pin}")
         name = self._irq_mapping[pin]
 
-        # TODO: fix this, it's horrible
-        self.push_data(self.read_sensors([name]))
         self.push_data(self.read_sensors([name]))
 
     @property
