@@ -3,7 +3,7 @@ from time import ticks_ms, ticks_diff
 
 class Sensor:
 
-    def __init__(self, name):
+    def __init__(self, name, calibration: dict | None = None):
 
         if " " in name:
             raise ValueError("names cannot contain spaces")
@@ -12,6 +12,7 @@ class Sensor:
         self._data = {}
         self._last_read = 0
         
+        self.calibration = calibration or {}
         self.integration = "sensor"
     
     @property
@@ -124,7 +125,13 @@ class Sensor:
             return
 
         self._last_read = ticks_ms()
-        self._data = self.read()
+
+        data = self.read()
+
+        for key, val in self.calibration.items():
+            data[key] += val
+
+        self._data = data
 
         return self.data
 
